@@ -1,0 +1,5207 @@
+   0  $accept : %entry% $end
+
+   1  main : expression DSEMI
+   2       | LET IDENT EQUALS expression DSEMI
+   3       | LET REC IDENT IDENT EQUALS expression DSEMI
+
+   4  constant_expression : INT
+   5                      | TRUE
+   6                      | FALSE
+   7                      | FLOAT
+   8                      | NIL
+   9                      | STRING
+  10                      | UNIT
+
+  11  monop : HEAD
+  12        | TAIL
+  13        | PRINT
+  14        | NEG
+  15        | FST
+  16        | SND
+
+  17  plus_minus : PLUS
+  18             | MINUS
+  19             | DPLUS
+  20             | DMINUS
+  21             | CARAT
+
+  22  times_div : TIMES
+  23            | DIV
+  24            | MOD
+  25            | DTIMES
+  26            | DDIV
+
+  27  expression : op_exp
+
+  28  op_exp : pure_or_exp LOGICALOR and_exp
+  29         | and_exp
+
+  30  and_exp : pure_and_exp LOGICALAND rel_exp
+  31          | rel_exp
+
+  32  rel_exp : pure_rel_exp GT cons_exp
+  33          | pure_rel_exp EQUALS cons_exp
+  34          | pure_rel_exp LT cons_exp
+  35          | pure_rel_exp LEQ cons_exp
+  36          | pure_rel_exp GEQ cons_exp
+  37          | pure_rel_exp NEQ cons_exp
+  38          | cons_exp
+
+  39  cons_exp : pure_add_exp DCOLON cons_exp
+  40           | add_exp
+
+  41  add_exp : pure_add_exp plus_minus mult_exp
+  42          | mult_exp
+
+  43  mult_exp : pure_mult_exp times_div expo_exp
+  44           | expo_exp
+
+  45  expo_exp : pure_app_raise_exp EXP expo_exp
+  46           | nonop_exp
+
+  47  nonop_exp : if_let_fun_try_monop_exp
+  48            | app_raise_exp
+
+  49  app_raise_exp : app_exp
+  50                | monop_raise
+  51                | pure_app_exp monop_raise
+
+  52  monop_raise : monop RAISE nonop_exp
+  53              | RAISE nonop_exp
+
+  54  app_exp : atomic_expression
+  55          | pure_app_exp nonapp_exp
+
+  56  nonapp_exp : atomic_expression
+  57             | if_let_fun_try_monop_exp
+
+  58  if_let_fun_try_monop_exp : TRY expression WITH exp_matches
+  59                           | LET REC IDENT IDENT EQUALS expression IN expression
+  60                           | LET IDENT EQUALS expression IN expression
+  61                           | FUN IDENT ARROW expression
+  62                           | IF expression THEN expression ELSE expression
+  63                           | monop if_let_fun_try_monop_exp
+
+  64  exp_matches : exp_match
+  65              | no_try_exp_match PIPE exp_matches
+
+  66  exp_match : pat ARROW expression
+
+  67  pat : UNDERSCORE
+  68      | INT
+
+  69  pure_or_exp : pure_or_exp LOGICALOR pure_and_exp
+  70              | pure_and_exp
+
+  71  pure_and_exp : pure_and_exp LOGICALAND pure_eq_exp
+  72               | pure_eq_exp
+
+  73  pure_eq_exp : pure_rel_exp
+
+  74  pure_rel_exp : pure_rel_exp GT pure_cons_exp
+  75               | pure_rel_exp EQUALS pure_cons_exp
+  76               | pure_rel_exp LT pure_cons_exp
+  77               | pure_rel_exp GEQ pure_cons_exp
+  78               | pure_rel_exp LEQ pure_cons_exp
+  79               | pure_rel_exp NEQ pure_cons_exp
+  80               | pure_cons_exp
+
+  81  pure_cons_exp : pure_add_exp DCOLON pure_cons_exp
+  82                | pure_add_exp
+
+  83  pure_add_exp : pure_add_exp plus_minus pure_mult_exp
+  84               | pure_mult_exp
+
+  85  pure_mult_exp : pure_mult_exp times_div pure_expo_exp
+  86                | pure_expo_exp
+
+  87  pure_expo_exp : pure_app_raise_exp EXP pure_expo_exp
+  88                | pure_app_raise_exp
+
+  89  pure_app_raise_exp : pure_app_exp
+  90                     | pure_monop_raise
+  91                     | pure_app_exp pure_monop_raise
+
+  92  pure_monop_raise : monop RAISE pure_app_raise_exp
+  93                   | RAISE pure_app_raise_exp
+
+  94  pure_app_exp : atomic_expression
+  95               | pure_app_exp atomic_expression
+
+  96  no_try_exp_match : pat ARROW no_try_expression
+
+  97  no_try_expression : no_try_op_exp
+
+  98  no_try_op_exp : pure_or_exp LOGICALOR no_try_and_exp
+  99                | no_try_and_exp
+
+ 100  no_try_and_exp : pure_and_exp LOGICALAND no_try_eq_exp
+ 101                 | no_try_eq_exp
+
+ 102  no_try_eq_exp : no_try_rel_exp
+
+ 103  no_try_rel_exp : pure_rel_exp GT no_try_cons_exp
+ 104                 | pure_rel_exp EQUALS no_try_cons_exp
+ 105                 | pure_rel_exp LT no_try_cons_exp
+ 106                 | pure_rel_exp GEQ no_try_cons_exp
+ 107                 | pure_rel_exp LEQ no_try_cons_exp
+ 108                 | pure_rel_exp NEQ no_try_cons_exp
+ 109                 | no_try_cons_exp
+
+ 110  no_try_cons_exp : pure_add_exp DCOLON no_try_cons_exp
+ 111                  | no_try_add_exp
+
+ 112  no_try_add_exp : pure_add_exp plus_minus no_try_mult_exp
+ 113                 | no_try_mult_exp
+
+ 114  no_try_mult_exp : pure_mult_exp times_div no_try_expo_exp
+ 115                  | no_try_expo_exp
+
+ 116  no_try_expo_exp : pure_app_raise_exp EXP no_try_expo_exp
+ 117                  | no_try_nonop_exp
+
+ 118  no_try_nonop_exp : no_try_if_let_fun_monop_exp
+ 119                   | no_try_app_raise_expression
+
+ 120  no_try_app_raise_expression : no_try_app_expression
+ 121                              | no_try_monop_expression
+ 122                              | pure_app_exp no_try_monop_expression
+
+ 123  no_try_monop_expression : monop RAISE no_try_app_raise_expression
+ 124                          | RAISE no_try_app_raise_expression
+
+ 125  no_try_app_expression : atomic_expression
+ 126                        | pure_app_exp no_try_nonapp_expression
+
+ 127  no_try_nonapp_expression : atomic_expression
+ 128                           | no_try_if_let_fun_monop_exp
+
+ 129  no_try_if_let_fun_monop_exp : IF expression THEN expression ELSE no_try_expression
+ 130                              | LET IDENT EQUALS expression IN no_try_expression
+ 131                              | LET REC IDENT IDENT EQUALS expression IN no_try_expression
+ 132                              | FUN IDENT ARROW no_try_expression
+ 133                              | monop no_try_if_let_fun_monop_exp
+
+ 134  atomic_expression : constant_expression
+ 135                    | IDENT
+ 136                    | list_expression
+ 137                    | paren_expression
+ 138                    | monop atomic_expression
+
+ 139  list_expression : LBRAC list_contents
+
+ 140  list_exp_end : RBRAC
+ 141               | SEMI list_tail
+
+ 142  list_tail : RBRAC
+ 143            | list_contents
+
+ 144  list_contents : expression list_exp_end
+
+ 145  paren_expression : LPAREN par_exp_end
+
+ 146  par_exp_end : RPAREN
+ 147              | expression RPAREN
+ 148              | expression COMMA expression RPAREN
+
+ 149  %entry% : '\001' main
+
+state 0
+	$accept : . %entry% $end  (0)
+
+	'\001'  shift 1
+	.  error
+
+	%entry%  goto 2
+
+
+state 1
+	%entry% : '\001' . main  (149)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 11
+	IF  shift 12
+	FUN  shift 13
+	RAISE  shift 14
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	main  goto 24
+	expression  goto 25
+	constant_expression  goto 26
+	monop  goto 27
+	op_exp  goto 28
+	pure_or_exp  goto 29
+	and_exp  goto 30
+	pure_and_exp  goto 31
+	rel_exp  goto 32
+	pure_rel_exp  goto 33
+	cons_exp  goto 34
+	pure_add_exp  goto 35
+	add_exp  goto 36
+	mult_exp  goto 37
+	pure_mult_exp  goto 38
+	expo_exp  goto 39
+	pure_app_raise_exp  goto 40
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 46
+	atomic_expression  goto 47
+	pure_eq_exp  goto 48
+	pure_cons_exp  goto 49
+	pure_expo_exp  goto 50
+	pure_monop_raise  goto 51
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 2
+	$accept : %entry% . $end  (0)
+
+	$end  accept
+
+
+state 3
+	constant_expression : INT .  (4)
+
+	.  reduce 4
+
+
+state 4
+	constant_expression : FLOAT .  (7)
+
+	.  reduce 7
+
+
+state 5
+	constant_expression : STRING .  (9)
+
+	.  reduce 9
+
+
+state 6
+	atomic_expression : IDENT .  (135)
+
+	.  reduce 135
+
+
+state 7
+	constant_expression : TRUE .  (5)
+
+	.  reduce 5
+
+
+state 8
+	constant_expression : FALSE .  (6)
+
+	.  reduce 6
+
+
+state 9
+	monop : NEG .  (14)
+
+	.  reduce 14
+
+
+state 10
+	constant_expression : NIL .  (8)
+
+	.  reduce 8
+
+
+state 11
+	main : LET . IDENT EQUALS expression DSEMI  (2)
+	main : LET . REC IDENT IDENT EQUALS expression DSEMI  (3)
+	if_let_fun_try_monop_exp : LET . REC IDENT IDENT EQUALS expression IN expression  (59)
+	if_let_fun_try_monop_exp : LET . IDENT EQUALS expression IN expression  (60)
+
+	IDENT  shift 54
+	REC  shift 55
+	.  error
+
+
+state 12
+	if_let_fun_try_monop_exp : IF . expression THEN expression ELSE expression  (62)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 56
+	IF  shift 12
+	FUN  shift 13
+	RAISE  shift 14
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	expression  goto 57
+	constant_expression  goto 26
+	monop  goto 27
+	op_exp  goto 28
+	pure_or_exp  goto 29
+	and_exp  goto 30
+	pure_and_exp  goto 31
+	rel_exp  goto 32
+	pure_rel_exp  goto 33
+	cons_exp  goto 34
+	pure_add_exp  goto 35
+	add_exp  goto 36
+	mult_exp  goto 37
+	pure_mult_exp  goto 38
+	expo_exp  goto 39
+	pure_app_raise_exp  goto 40
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 46
+	atomic_expression  goto 47
+	pure_eq_exp  goto 48
+	pure_cons_exp  goto 49
+	pure_expo_exp  goto 50
+	pure_monop_raise  goto 51
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 13
+	if_let_fun_try_monop_exp : FUN . IDENT ARROW expression  (61)
+
+	IDENT  shift 58
+	.  error
+
+
+state 14
+	monop_raise : RAISE . nonop_exp  (53)
+	pure_monop_raise : RAISE . pure_app_raise_exp  (93)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 56
+	IF  shift 12
+	FUN  shift 13
+	RAISE  shift 14
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	constant_expression  goto 26
+	monop  goto 27
+	pure_app_raise_exp  goto 59
+	nonop_exp  goto 60
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 46
+	atomic_expression  goto 47
+	pure_monop_raise  goto 51
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 15
+	if_let_fun_try_monop_exp : TRY . expression WITH exp_matches  (58)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 56
+	IF  shift 12
+	FUN  shift 13
+	RAISE  shift 14
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	expression  goto 61
+	constant_expression  goto 26
+	monop  goto 27
+	op_exp  goto 28
+	pure_or_exp  goto 29
+	and_exp  goto 30
+	pure_and_exp  goto 31
+	rel_exp  goto 32
+	pure_rel_exp  goto 33
+	cons_exp  goto 34
+	pure_add_exp  goto 35
+	add_exp  goto 36
+	mult_exp  goto 37
+	pure_mult_exp  goto 38
+	expo_exp  goto 39
+	pure_app_raise_exp  goto 40
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 46
+	atomic_expression  goto 47
+	pure_eq_exp  goto 48
+	pure_cons_exp  goto 49
+	pure_expo_exp  goto 50
+	pure_monop_raise  goto 51
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 16
+	list_expression : LBRAC . list_contents  (139)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 56
+	IF  shift 12
+	FUN  shift 13
+	RAISE  shift 14
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	expression  goto 62
+	constant_expression  goto 26
+	monop  goto 27
+	op_exp  goto 28
+	pure_or_exp  goto 29
+	and_exp  goto 30
+	pure_and_exp  goto 31
+	rel_exp  goto 32
+	pure_rel_exp  goto 33
+	cons_exp  goto 34
+	pure_add_exp  goto 35
+	add_exp  goto 36
+	mult_exp  goto 37
+	pure_mult_exp  goto 38
+	expo_exp  goto 39
+	pure_app_raise_exp  goto 40
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 46
+	atomic_expression  goto 47
+	pure_eq_exp  goto 48
+	pure_cons_exp  goto 49
+	pure_expo_exp  goto 50
+	pure_monop_raise  goto 51
+	list_expression  goto 52
+	paren_expression  goto 53
+	list_contents  goto 63
+
+
+state 17
+	paren_expression : LPAREN . par_exp_end  (145)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 56
+	IF  shift 12
+	FUN  shift 13
+	RAISE  shift 14
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	RPAREN  shift 64
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	expression  goto 65
+	constant_expression  goto 26
+	monop  goto 27
+	op_exp  goto 28
+	pure_or_exp  goto 29
+	and_exp  goto 30
+	pure_and_exp  goto 31
+	rel_exp  goto 32
+	pure_rel_exp  goto 33
+	cons_exp  goto 34
+	pure_add_exp  goto 35
+	add_exp  goto 36
+	mult_exp  goto 37
+	pure_mult_exp  goto 38
+	expo_exp  goto 39
+	pure_app_raise_exp  goto 40
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 46
+	atomic_expression  goto 47
+	pure_eq_exp  goto 48
+	pure_cons_exp  goto 49
+	pure_expo_exp  goto 50
+	pure_monop_raise  goto 51
+	list_expression  goto 52
+	paren_expression  goto 53
+	par_exp_end  goto 66
+
+
+state 18
+	constant_expression : UNIT .  (10)
+
+	.  reduce 10
+
+
+state 19
+	monop : HEAD .  (11)
+
+	.  reduce 11
+
+
+state 20
+	monop : TAIL .  (12)
+
+	.  reduce 12
+
+
+state 21
+	monop : PRINT .  (13)
+
+	.  reduce 13
+
+
+state 22
+	monop : FST .  (15)
+
+	.  reduce 15
+
+
+state 23
+	monop : SND .  (16)
+
+	.  reduce 16
+
+
+state 24
+	%entry% : '\001' main .  (149)
+
+	.  reduce 149
+
+
+state 25
+	main : expression . DSEMI  (1)
+
+	DSEMI  shift 67
+	.  error
+
+
+state 26
+	atomic_expression : constant_expression .  (134)
+
+	.  reduce 134
+
+
+state 27
+	monop_raise : monop . RAISE nonop_exp  (52)
+	if_let_fun_try_monop_exp : monop . if_let_fun_try_monop_exp  (63)
+	pure_monop_raise : monop . RAISE pure_app_raise_exp  (92)
+	atomic_expression : monop . atomic_expression  (138)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 56
+	IF  shift 12
+	FUN  shift 13
+	RAISE  shift 68
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	constant_expression  goto 26
+	monop  goto 69
+	if_let_fun_try_monop_exp  goto 70
+	atomic_expression  goto 71
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 28
+	expression : op_exp .  (27)
+
+	.  reduce 27
+
+
+state 29
+	op_exp : pure_or_exp . LOGICALOR and_exp  (28)
+	pure_or_exp : pure_or_exp . LOGICALOR pure_and_exp  (69)
+
+	LOGICALOR  shift 72
+	.  error
+
+
+state 30
+	op_exp : and_exp .  (29)
+
+	.  reduce 29
+
+
+state 31
+	and_exp : pure_and_exp . LOGICALAND rel_exp  (30)
+	pure_or_exp : pure_and_exp .  (70)
+	pure_and_exp : pure_and_exp . LOGICALAND pure_eq_exp  (71)
+
+	LOGICALAND  shift 73
+	LOGICALOR  reduce 70
+
+
+state 32
+	and_exp : rel_exp .  (31)
+
+	.  reduce 31
+
+
+state 33
+	rel_exp : pure_rel_exp . GT cons_exp  (32)
+	rel_exp : pure_rel_exp . EQUALS cons_exp  (33)
+	rel_exp : pure_rel_exp . LT cons_exp  (34)
+	rel_exp : pure_rel_exp . LEQ cons_exp  (35)
+	rel_exp : pure_rel_exp . GEQ cons_exp  (36)
+	rel_exp : pure_rel_exp . NEQ cons_exp  (37)
+	pure_eq_exp : pure_rel_exp .  (73)
+	pure_rel_exp : pure_rel_exp . GT pure_cons_exp  (74)
+	pure_rel_exp : pure_rel_exp . EQUALS pure_cons_exp  (75)
+	pure_rel_exp : pure_rel_exp . LT pure_cons_exp  (76)
+	pure_rel_exp : pure_rel_exp . GEQ pure_cons_exp  (77)
+	pure_rel_exp : pure_rel_exp . LEQ pure_cons_exp  (78)
+	pure_rel_exp : pure_rel_exp . NEQ pure_cons_exp  (79)
+
+	LT  shift 74
+	GT  shift 75
+	LEQ  shift 76
+	GEQ  shift 77
+	EQUALS  shift 78
+	NEQ  shift 79
+	LOGICALAND  reduce 73
+	LOGICALOR  reduce 73
+
+
+state 34
+	rel_exp : cons_exp .  (38)
+
+	.  reduce 38
+
+
+state 35
+	cons_exp : pure_add_exp . DCOLON cons_exp  (39)
+	add_exp : pure_add_exp . plus_minus mult_exp  (41)
+	pure_cons_exp : pure_add_exp . DCOLON pure_cons_exp  (81)
+	pure_cons_exp : pure_add_exp .  (82)
+	pure_add_exp : pure_add_exp . plus_minus pure_mult_exp  (83)
+
+	PLUS  shift 80
+	MINUS  shift 81
+	DPLUS  shift 82
+	DMINUS  shift 83
+	CARAT  shift 84
+	DCOLON  shift 85
+	LT  reduce 82
+	GT  reduce 82
+	LEQ  reduce 82
+	GEQ  reduce 82
+	EQUALS  reduce 82
+	NEQ  reduce 82
+	LOGICALAND  reduce 82
+	LOGICALOR  reduce 82
+
+	plus_minus  goto 86
+
+
+state 36
+	cons_exp : add_exp .  (40)
+
+	.  reduce 40
+
+
+state 37
+	add_exp : mult_exp .  (42)
+
+	.  reduce 42
+
+
+state 38
+	mult_exp : pure_mult_exp . times_div expo_exp  (43)
+	pure_add_exp : pure_mult_exp .  (84)
+	pure_mult_exp : pure_mult_exp . times_div pure_expo_exp  (85)
+
+	TIMES  shift 87
+	DIV  shift 88
+	DTIMES  shift 89
+	DDIV  shift 90
+	MOD  shift 91
+	PLUS  reduce 84
+	MINUS  reduce 84
+	DPLUS  reduce 84
+	DMINUS  reduce 84
+	CARAT  reduce 84
+	LT  reduce 84
+	GT  reduce 84
+	LEQ  reduce 84
+	GEQ  reduce 84
+	EQUALS  reduce 84
+	NEQ  reduce 84
+	DCOLON  reduce 84
+	LOGICALAND  reduce 84
+	LOGICALOR  reduce 84
+
+	times_div  goto 92
+
+
+state 39
+	mult_exp : expo_exp .  (44)
+
+	.  reduce 44
+
+
+state 40
+	expo_exp : pure_app_raise_exp . EXP expo_exp  (45)
+	pure_expo_exp : pure_app_raise_exp . EXP pure_expo_exp  (87)
+	pure_expo_exp : pure_app_raise_exp .  (88)
+
+	EXP  shift 93
+	PLUS  reduce 88
+	MINUS  reduce 88
+	TIMES  reduce 88
+	DIV  reduce 88
+	DPLUS  reduce 88
+	DMINUS  reduce 88
+	DTIMES  reduce 88
+	DDIV  reduce 88
+	MOD  reduce 88
+	CARAT  reduce 88
+	LT  reduce 88
+	GT  reduce 88
+	LEQ  reduce 88
+	GEQ  reduce 88
+	EQUALS  reduce 88
+	NEQ  reduce 88
+	DCOLON  reduce 88
+	LOGICALAND  reduce 88
+	LOGICALOR  reduce 88
+
+
+state 41
+	expo_exp : nonop_exp .  (46)
+
+	.  reduce 46
+
+
+state 42
+	nonop_exp : if_let_fun_try_monop_exp .  (47)
+
+	.  reduce 47
+
+
+state 43
+	nonop_exp : app_raise_exp .  (48)
+
+	.  reduce 48
+
+
+state 44
+	app_raise_exp : app_exp .  (49)
+
+	.  reduce 49
+
+
+state 45
+	app_raise_exp : monop_raise .  (50)
+
+	.  reduce 50
+
+
+state 46
+	app_raise_exp : pure_app_exp . monop_raise  (51)
+	app_exp : pure_app_exp . nonapp_exp  (55)
+	pure_app_raise_exp : pure_app_exp .  (89)
+	pure_app_raise_exp : pure_app_exp . pure_monop_raise  (91)
+	pure_app_exp : pure_app_exp . atomic_expression  (95)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 56
+	IF  shift 12
+	FUN  shift 13
+	RAISE  shift 14
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	PLUS  reduce 89
+	MINUS  reduce 89
+	TIMES  reduce 89
+	DIV  reduce 89
+	DPLUS  reduce 89
+	DMINUS  reduce 89
+	DTIMES  reduce 89
+	DDIV  reduce 89
+	MOD  reduce 89
+	EXP  reduce 89
+	CARAT  reduce 89
+	LT  reduce 89
+	GT  reduce 89
+	LEQ  reduce 89
+	GEQ  reduce 89
+	EQUALS  reduce 89
+	NEQ  reduce 89
+	DCOLON  reduce 89
+	LOGICALAND  reduce 89
+	LOGICALOR  reduce 89
+
+	constant_expression  goto 26
+	monop  goto 27
+	if_let_fun_try_monop_exp  goto 94
+	monop_raise  goto 95
+	atomic_expression  goto 96
+	nonapp_exp  goto 97
+	pure_monop_raise  goto 98
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 47
+	app_exp : atomic_expression .  (54)
+	pure_app_exp : atomic_expression .  (94)
+
+	INT  reduce 94
+	FLOAT  reduce 94
+	STRING  reduce 94
+	IDENT  reduce 94
+	TRUE  reduce 94
+	FALSE  reduce 94
+	NEG  reduce 94
+	PLUS  reduce 94
+	MINUS  reduce 94
+	TIMES  reduce 94
+	DIV  reduce 94
+	DPLUS  reduce 94
+	DMINUS  reduce 94
+	DTIMES  reduce 94
+	DDIV  reduce 94
+	MOD  reduce 94
+	EXP  reduce 94
+	CARAT  reduce 94
+	LT  reduce 94
+	GT  reduce 94
+	LEQ  reduce 94
+	GEQ  reduce 94
+	EQUALS  reduce 94
+	NEQ  reduce 94
+	SEMI  reduce 54
+	DSEMI  reduce 54
+	DCOLON  reduce 94
+	NIL  reduce 94
+	LET  reduce 94
+	IN  reduce 54
+	IF  reduce 94
+	THEN  reduce 54
+	ELSE  reduce 54
+	FUN  reduce 94
+	RAISE  reduce 94
+	TRY  reduce 94
+	WITH  reduce 54
+	LOGICALAND  reduce 94
+	LOGICALOR  reduce 94
+	LBRAC  reduce 94
+	RBRAC  reduce 54
+	LPAREN  reduce 94
+	RPAREN  reduce 54
+	COMMA  reduce 54
+	UNIT  reduce 94
+	HEAD  reduce 94
+	TAIL  reduce 94
+	PRINT  reduce 94
+	FST  reduce 94
+	SND  reduce 94
+
+
+state 48
+	pure_and_exp : pure_eq_exp .  (72)
+
+	.  reduce 72
+
+
+state 49
+	pure_rel_exp : pure_cons_exp .  (80)
+
+	.  reduce 80
+
+
+state 50
+	pure_mult_exp : pure_expo_exp .  (86)
+
+	.  reduce 86
+
+
+state 51
+	pure_app_raise_exp : pure_monop_raise .  (90)
+
+	.  reduce 90
+
+
+state 52
+	atomic_expression : list_expression .  (136)
+
+	.  reduce 136
+
+
+state 53
+	atomic_expression : paren_expression .  (137)
+
+	.  reduce 137
+
+
+state 54
+	main : LET IDENT . EQUALS expression DSEMI  (2)
+	if_let_fun_try_monop_exp : LET IDENT . EQUALS expression IN expression  (60)
+
+	EQUALS  shift 99
+	.  error
+
+
+state 55
+	main : LET REC . IDENT IDENT EQUALS expression DSEMI  (3)
+	if_let_fun_try_monop_exp : LET REC . IDENT IDENT EQUALS expression IN expression  (59)
+
+	IDENT  shift 100
+	.  error
+
+
+state 56
+	if_let_fun_try_monop_exp : LET . REC IDENT IDENT EQUALS expression IN expression  (59)
+	if_let_fun_try_monop_exp : LET . IDENT EQUALS expression IN expression  (60)
+
+	IDENT  shift 101
+	REC  shift 102
+	.  error
+
+
+state 57
+	if_let_fun_try_monop_exp : IF expression . THEN expression ELSE expression  (62)
+
+	THEN  shift 103
+	.  error
+
+
+state 58
+	if_let_fun_try_monop_exp : FUN IDENT . ARROW expression  (61)
+
+	ARROW  shift 104
+	.  error
+
+
+state 59
+	pure_monop_raise : RAISE pure_app_raise_exp .  (93)
+
+	.  reduce 93
+
+
+state 60
+	monop_raise : RAISE nonop_exp .  (53)
+
+	.  reduce 53
+
+
+state 61
+	if_let_fun_try_monop_exp : TRY expression . WITH exp_matches  (58)
+
+	WITH  shift 105
+	.  error
+
+
+state 62
+	list_contents : expression . list_exp_end  (144)
+
+	SEMI  shift 106
+	RBRAC  shift 107
+	.  error
+
+	list_exp_end  goto 108
+
+
+state 63
+	list_expression : LBRAC list_contents .  (139)
+
+	.  reduce 139
+
+
+state 64
+	par_exp_end : RPAREN .  (146)
+
+	.  reduce 146
+
+
+state 65
+	par_exp_end : expression . RPAREN  (147)
+	par_exp_end : expression . COMMA expression RPAREN  (148)
+
+	RPAREN  shift 109
+	COMMA  shift 110
+	.  error
+
+
+state 66
+	paren_expression : LPAREN par_exp_end .  (145)
+
+	.  reduce 145
+
+
+state 67
+	main : expression DSEMI .  (1)
+
+	.  reduce 1
+
+
+state 68
+	monop_raise : monop RAISE . nonop_exp  (52)
+	pure_monop_raise : monop RAISE . pure_app_raise_exp  (92)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 56
+	IF  shift 12
+	FUN  shift 13
+	RAISE  shift 14
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	constant_expression  goto 26
+	monop  goto 27
+	pure_app_raise_exp  goto 111
+	nonop_exp  goto 112
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 46
+	atomic_expression  goto 47
+	pure_monop_raise  goto 51
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 69
+	if_let_fun_try_monop_exp : monop . if_let_fun_try_monop_exp  (63)
+	atomic_expression : monop . atomic_expression  (138)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 56
+	IF  shift 12
+	FUN  shift 13
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	constant_expression  goto 26
+	monop  goto 69
+	if_let_fun_try_monop_exp  goto 70
+	atomic_expression  goto 71
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 70
+	if_let_fun_try_monop_exp : monop if_let_fun_try_monop_exp .  (63)
+
+	.  reduce 63
+
+
+state 71
+	atomic_expression : monop atomic_expression .  (138)
+
+	.  reduce 138
+
+
+state 72
+	op_exp : pure_or_exp LOGICALOR . and_exp  (28)
+	pure_or_exp : pure_or_exp LOGICALOR . pure_and_exp  (69)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 56
+	IF  shift 12
+	FUN  shift 13
+	RAISE  shift 14
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	constant_expression  goto 26
+	monop  goto 27
+	and_exp  goto 113
+	pure_and_exp  goto 114
+	rel_exp  goto 32
+	pure_rel_exp  goto 33
+	cons_exp  goto 34
+	pure_add_exp  goto 35
+	add_exp  goto 36
+	mult_exp  goto 37
+	pure_mult_exp  goto 38
+	expo_exp  goto 39
+	pure_app_raise_exp  goto 40
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 46
+	atomic_expression  goto 47
+	pure_eq_exp  goto 48
+	pure_cons_exp  goto 49
+	pure_expo_exp  goto 50
+	pure_monop_raise  goto 51
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 73
+	and_exp : pure_and_exp LOGICALAND . rel_exp  (30)
+	pure_and_exp : pure_and_exp LOGICALAND . pure_eq_exp  (71)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 56
+	IF  shift 12
+	FUN  shift 13
+	RAISE  shift 14
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	constant_expression  goto 26
+	monop  goto 27
+	rel_exp  goto 115
+	pure_rel_exp  goto 33
+	cons_exp  goto 34
+	pure_add_exp  goto 35
+	add_exp  goto 36
+	mult_exp  goto 37
+	pure_mult_exp  goto 38
+	expo_exp  goto 39
+	pure_app_raise_exp  goto 40
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 46
+	atomic_expression  goto 47
+	pure_eq_exp  goto 116
+	pure_cons_exp  goto 49
+	pure_expo_exp  goto 50
+	pure_monop_raise  goto 51
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 74
+	rel_exp : pure_rel_exp LT . cons_exp  (34)
+	pure_rel_exp : pure_rel_exp LT . pure_cons_exp  (76)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 56
+	IF  shift 12
+	FUN  shift 13
+	RAISE  shift 14
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	constant_expression  goto 26
+	monop  goto 27
+	cons_exp  goto 117
+	pure_add_exp  goto 35
+	add_exp  goto 36
+	mult_exp  goto 37
+	pure_mult_exp  goto 38
+	expo_exp  goto 39
+	pure_app_raise_exp  goto 40
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 46
+	atomic_expression  goto 47
+	pure_cons_exp  goto 118
+	pure_expo_exp  goto 50
+	pure_monop_raise  goto 51
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 75
+	rel_exp : pure_rel_exp GT . cons_exp  (32)
+	pure_rel_exp : pure_rel_exp GT . pure_cons_exp  (74)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 56
+	IF  shift 12
+	FUN  shift 13
+	RAISE  shift 14
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	constant_expression  goto 26
+	monop  goto 27
+	cons_exp  goto 119
+	pure_add_exp  goto 35
+	add_exp  goto 36
+	mult_exp  goto 37
+	pure_mult_exp  goto 38
+	expo_exp  goto 39
+	pure_app_raise_exp  goto 40
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 46
+	atomic_expression  goto 47
+	pure_cons_exp  goto 120
+	pure_expo_exp  goto 50
+	pure_monop_raise  goto 51
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 76
+	rel_exp : pure_rel_exp LEQ . cons_exp  (35)
+	pure_rel_exp : pure_rel_exp LEQ . pure_cons_exp  (78)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 56
+	IF  shift 12
+	FUN  shift 13
+	RAISE  shift 14
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	constant_expression  goto 26
+	monop  goto 27
+	cons_exp  goto 121
+	pure_add_exp  goto 35
+	add_exp  goto 36
+	mult_exp  goto 37
+	pure_mult_exp  goto 38
+	expo_exp  goto 39
+	pure_app_raise_exp  goto 40
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 46
+	atomic_expression  goto 47
+	pure_cons_exp  goto 122
+	pure_expo_exp  goto 50
+	pure_monop_raise  goto 51
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 77
+	rel_exp : pure_rel_exp GEQ . cons_exp  (36)
+	pure_rel_exp : pure_rel_exp GEQ . pure_cons_exp  (77)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 56
+	IF  shift 12
+	FUN  shift 13
+	RAISE  shift 14
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	constant_expression  goto 26
+	monop  goto 27
+	cons_exp  goto 123
+	pure_add_exp  goto 35
+	add_exp  goto 36
+	mult_exp  goto 37
+	pure_mult_exp  goto 38
+	expo_exp  goto 39
+	pure_app_raise_exp  goto 40
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 46
+	atomic_expression  goto 47
+	pure_cons_exp  goto 124
+	pure_expo_exp  goto 50
+	pure_monop_raise  goto 51
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 78
+	rel_exp : pure_rel_exp EQUALS . cons_exp  (33)
+	pure_rel_exp : pure_rel_exp EQUALS . pure_cons_exp  (75)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 56
+	IF  shift 12
+	FUN  shift 13
+	RAISE  shift 14
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	constant_expression  goto 26
+	monop  goto 27
+	cons_exp  goto 125
+	pure_add_exp  goto 35
+	add_exp  goto 36
+	mult_exp  goto 37
+	pure_mult_exp  goto 38
+	expo_exp  goto 39
+	pure_app_raise_exp  goto 40
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 46
+	atomic_expression  goto 47
+	pure_cons_exp  goto 126
+	pure_expo_exp  goto 50
+	pure_monop_raise  goto 51
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 79
+	rel_exp : pure_rel_exp NEQ . cons_exp  (37)
+	pure_rel_exp : pure_rel_exp NEQ . pure_cons_exp  (79)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 56
+	IF  shift 12
+	FUN  shift 13
+	RAISE  shift 14
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	constant_expression  goto 26
+	monop  goto 27
+	cons_exp  goto 127
+	pure_add_exp  goto 35
+	add_exp  goto 36
+	mult_exp  goto 37
+	pure_mult_exp  goto 38
+	expo_exp  goto 39
+	pure_app_raise_exp  goto 40
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 46
+	atomic_expression  goto 47
+	pure_cons_exp  goto 128
+	pure_expo_exp  goto 50
+	pure_monop_raise  goto 51
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 80
+	plus_minus : PLUS .  (17)
+
+	.  reduce 17
+
+
+state 81
+	plus_minus : MINUS .  (18)
+
+	.  reduce 18
+
+
+state 82
+	plus_minus : DPLUS .  (19)
+
+	.  reduce 19
+
+
+state 83
+	plus_minus : DMINUS .  (20)
+
+	.  reduce 20
+
+
+state 84
+	plus_minus : CARAT .  (21)
+
+	.  reduce 21
+
+
+state 85
+	cons_exp : pure_add_exp DCOLON . cons_exp  (39)
+	pure_cons_exp : pure_add_exp DCOLON . pure_cons_exp  (81)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 56
+	IF  shift 12
+	FUN  shift 13
+	RAISE  shift 14
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	constant_expression  goto 26
+	monop  goto 27
+	cons_exp  goto 129
+	pure_add_exp  goto 35
+	add_exp  goto 36
+	mult_exp  goto 37
+	pure_mult_exp  goto 38
+	expo_exp  goto 39
+	pure_app_raise_exp  goto 40
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 46
+	atomic_expression  goto 47
+	pure_cons_exp  goto 130
+	pure_expo_exp  goto 50
+	pure_monop_raise  goto 51
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 86
+	add_exp : pure_add_exp plus_minus . mult_exp  (41)
+	pure_add_exp : pure_add_exp plus_minus . pure_mult_exp  (83)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 56
+	IF  shift 12
+	FUN  shift 13
+	RAISE  shift 14
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	constant_expression  goto 26
+	monop  goto 27
+	mult_exp  goto 131
+	pure_mult_exp  goto 132
+	expo_exp  goto 39
+	pure_app_raise_exp  goto 40
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 46
+	atomic_expression  goto 47
+	pure_expo_exp  goto 50
+	pure_monop_raise  goto 51
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 87
+	times_div : TIMES .  (22)
+
+	.  reduce 22
+
+
+state 88
+	times_div : DIV .  (23)
+
+	.  reduce 23
+
+
+state 89
+	times_div : DTIMES .  (25)
+
+	.  reduce 25
+
+
+state 90
+	times_div : DDIV .  (26)
+
+	.  reduce 26
+
+
+state 91
+	times_div : MOD .  (24)
+
+	.  reduce 24
+
+
+state 92
+	mult_exp : pure_mult_exp times_div . expo_exp  (43)
+	pure_mult_exp : pure_mult_exp times_div . pure_expo_exp  (85)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 56
+	IF  shift 12
+	FUN  shift 13
+	RAISE  shift 14
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	constant_expression  goto 26
+	monop  goto 27
+	expo_exp  goto 133
+	pure_app_raise_exp  goto 40
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 46
+	atomic_expression  goto 47
+	pure_expo_exp  goto 134
+	pure_monop_raise  goto 51
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 93
+	expo_exp : pure_app_raise_exp EXP . expo_exp  (45)
+	pure_expo_exp : pure_app_raise_exp EXP . pure_expo_exp  (87)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 56
+	IF  shift 12
+	FUN  shift 13
+	RAISE  shift 14
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	constant_expression  goto 26
+	monop  goto 27
+	expo_exp  goto 135
+	pure_app_raise_exp  goto 40
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 46
+	atomic_expression  goto 47
+	pure_expo_exp  goto 136
+	pure_monop_raise  goto 51
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 94
+	nonapp_exp : if_let_fun_try_monop_exp .  (57)
+
+	.  reduce 57
+
+
+state 95
+	app_raise_exp : pure_app_exp monop_raise .  (51)
+
+	.  reduce 51
+
+
+state 96
+	nonapp_exp : atomic_expression .  (56)
+	pure_app_exp : pure_app_exp atomic_expression .  (95)
+
+	INT  reduce 95
+	FLOAT  reduce 95
+	STRING  reduce 95
+	IDENT  reduce 95
+	TRUE  reduce 95
+	FALSE  reduce 95
+	NEG  reduce 95
+	PLUS  reduce 95
+	MINUS  reduce 95
+	TIMES  reduce 95
+	DIV  reduce 95
+	DPLUS  reduce 95
+	DMINUS  reduce 95
+	DTIMES  reduce 95
+	DDIV  reduce 95
+	MOD  reduce 95
+	EXP  reduce 95
+	CARAT  reduce 95
+	LT  reduce 95
+	GT  reduce 95
+	LEQ  reduce 95
+	GEQ  reduce 95
+	EQUALS  reduce 95
+	NEQ  reduce 95
+	SEMI  reduce 56
+	DSEMI  reduce 56
+	DCOLON  reduce 95
+	NIL  reduce 95
+	LET  reduce 95
+	IN  reduce 56
+	IF  reduce 95
+	THEN  reduce 56
+	ELSE  reduce 56
+	FUN  reduce 95
+	RAISE  reduce 95
+	TRY  reduce 95
+	WITH  reduce 56
+	LOGICALAND  reduce 95
+	LOGICALOR  reduce 95
+	LBRAC  reduce 95
+	RBRAC  reduce 56
+	LPAREN  reduce 95
+	RPAREN  reduce 56
+	COMMA  reduce 56
+	UNIT  reduce 95
+	HEAD  reduce 95
+	TAIL  reduce 95
+	PRINT  reduce 95
+	FST  reduce 95
+	SND  reduce 95
+
+
+state 97
+	app_exp : pure_app_exp nonapp_exp .  (55)
+
+	.  reduce 55
+
+
+state 98
+	pure_app_raise_exp : pure_app_exp pure_monop_raise .  (91)
+
+	.  reduce 91
+
+
+state 99
+	main : LET IDENT EQUALS . expression DSEMI  (2)
+	if_let_fun_try_monop_exp : LET IDENT EQUALS . expression IN expression  (60)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 56
+	IF  shift 12
+	FUN  shift 13
+	RAISE  shift 14
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	expression  goto 137
+	constant_expression  goto 26
+	monop  goto 27
+	op_exp  goto 28
+	pure_or_exp  goto 29
+	and_exp  goto 30
+	pure_and_exp  goto 31
+	rel_exp  goto 32
+	pure_rel_exp  goto 33
+	cons_exp  goto 34
+	pure_add_exp  goto 35
+	add_exp  goto 36
+	mult_exp  goto 37
+	pure_mult_exp  goto 38
+	expo_exp  goto 39
+	pure_app_raise_exp  goto 40
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 46
+	atomic_expression  goto 47
+	pure_eq_exp  goto 48
+	pure_cons_exp  goto 49
+	pure_expo_exp  goto 50
+	pure_monop_raise  goto 51
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 100
+	main : LET REC IDENT . IDENT EQUALS expression DSEMI  (3)
+	if_let_fun_try_monop_exp : LET REC IDENT . IDENT EQUALS expression IN expression  (59)
+
+	IDENT  shift 138
+	.  error
+
+
+state 101
+	if_let_fun_try_monop_exp : LET IDENT . EQUALS expression IN expression  (60)
+
+	EQUALS  shift 139
+	.  error
+
+
+state 102
+	if_let_fun_try_monop_exp : LET REC . IDENT IDENT EQUALS expression IN expression  (59)
+
+	IDENT  shift 140
+	.  error
+
+
+state 103
+	if_let_fun_try_monop_exp : IF expression THEN . expression ELSE expression  (62)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 56
+	IF  shift 12
+	FUN  shift 13
+	RAISE  shift 14
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	expression  goto 141
+	constant_expression  goto 26
+	monop  goto 27
+	op_exp  goto 28
+	pure_or_exp  goto 29
+	and_exp  goto 30
+	pure_and_exp  goto 31
+	rel_exp  goto 32
+	pure_rel_exp  goto 33
+	cons_exp  goto 34
+	pure_add_exp  goto 35
+	add_exp  goto 36
+	mult_exp  goto 37
+	pure_mult_exp  goto 38
+	expo_exp  goto 39
+	pure_app_raise_exp  goto 40
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 46
+	atomic_expression  goto 47
+	pure_eq_exp  goto 48
+	pure_cons_exp  goto 49
+	pure_expo_exp  goto 50
+	pure_monop_raise  goto 51
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 104
+	if_let_fun_try_monop_exp : FUN IDENT ARROW . expression  (61)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 56
+	IF  shift 12
+	FUN  shift 13
+	RAISE  shift 14
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	expression  goto 142
+	constant_expression  goto 26
+	monop  goto 27
+	op_exp  goto 28
+	pure_or_exp  goto 29
+	and_exp  goto 30
+	pure_and_exp  goto 31
+	rel_exp  goto 32
+	pure_rel_exp  goto 33
+	cons_exp  goto 34
+	pure_add_exp  goto 35
+	add_exp  goto 36
+	mult_exp  goto 37
+	pure_mult_exp  goto 38
+	expo_exp  goto 39
+	pure_app_raise_exp  goto 40
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 46
+	atomic_expression  goto 47
+	pure_eq_exp  goto 48
+	pure_cons_exp  goto 49
+	pure_expo_exp  goto 50
+	pure_monop_raise  goto 51
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 105
+	if_let_fun_try_monop_exp : TRY expression WITH . exp_matches  (58)
+
+	INT  shift 143
+	UNDERSCORE  shift 144
+	.  error
+
+	exp_matches  goto 145
+	exp_match  goto 146
+	no_try_exp_match  goto 147
+	pat  goto 148
+
+
+state 106
+	list_exp_end : SEMI . list_tail  (141)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 56
+	IF  shift 12
+	FUN  shift 13
+	RAISE  shift 14
+	TRY  shift 15
+	LBRAC  shift 16
+	RBRAC  shift 149
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	expression  goto 62
+	constant_expression  goto 26
+	monop  goto 27
+	op_exp  goto 28
+	pure_or_exp  goto 29
+	and_exp  goto 30
+	pure_and_exp  goto 31
+	rel_exp  goto 32
+	pure_rel_exp  goto 33
+	cons_exp  goto 34
+	pure_add_exp  goto 35
+	add_exp  goto 36
+	mult_exp  goto 37
+	pure_mult_exp  goto 38
+	expo_exp  goto 39
+	pure_app_raise_exp  goto 40
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 46
+	atomic_expression  goto 47
+	pure_eq_exp  goto 48
+	pure_cons_exp  goto 49
+	pure_expo_exp  goto 50
+	pure_monop_raise  goto 51
+	list_expression  goto 52
+	paren_expression  goto 53
+	list_contents  goto 150
+	list_tail  goto 151
+
+
+state 107
+	list_exp_end : RBRAC .  (140)
+
+	.  reduce 140
+
+
+state 108
+	list_contents : expression list_exp_end .  (144)
+
+	.  reduce 144
+
+
+state 109
+	par_exp_end : expression RPAREN .  (147)
+
+	.  reduce 147
+
+
+state 110
+	par_exp_end : expression COMMA . expression RPAREN  (148)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 56
+	IF  shift 12
+	FUN  shift 13
+	RAISE  shift 14
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	expression  goto 152
+	constant_expression  goto 26
+	monop  goto 27
+	op_exp  goto 28
+	pure_or_exp  goto 29
+	and_exp  goto 30
+	pure_and_exp  goto 31
+	rel_exp  goto 32
+	pure_rel_exp  goto 33
+	cons_exp  goto 34
+	pure_add_exp  goto 35
+	add_exp  goto 36
+	mult_exp  goto 37
+	pure_mult_exp  goto 38
+	expo_exp  goto 39
+	pure_app_raise_exp  goto 40
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 46
+	atomic_expression  goto 47
+	pure_eq_exp  goto 48
+	pure_cons_exp  goto 49
+	pure_expo_exp  goto 50
+	pure_monop_raise  goto 51
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 111
+	pure_monop_raise : monop RAISE pure_app_raise_exp .  (92)
+
+	.  reduce 92
+
+
+state 112
+	monop_raise : monop RAISE nonop_exp .  (52)
+
+	.  reduce 52
+
+
+state 113
+	op_exp : pure_or_exp LOGICALOR and_exp .  (28)
+
+	.  reduce 28
+
+
+state 114
+	and_exp : pure_and_exp . LOGICALAND rel_exp  (30)
+	pure_or_exp : pure_or_exp LOGICALOR pure_and_exp .  (69)
+	pure_and_exp : pure_and_exp . LOGICALAND pure_eq_exp  (71)
+
+	LOGICALAND  shift 73
+	LOGICALOR  reduce 69
+
+
+state 115
+	and_exp : pure_and_exp LOGICALAND rel_exp .  (30)
+
+	.  reduce 30
+
+
+state 116
+	pure_and_exp : pure_and_exp LOGICALAND pure_eq_exp .  (71)
+
+	.  reduce 71
+
+
+state 117
+	rel_exp : pure_rel_exp LT cons_exp .  (34)
+
+	.  reduce 34
+
+
+state 118
+	pure_rel_exp : pure_rel_exp LT pure_cons_exp .  (76)
+
+	.  reduce 76
+
+
+state 119
+	rel_exp : pure_rel_exp GT cons_exp .  (32)
+
+	.  reduce 32
+
+
+state 120
+	pure_rel_exp : pure_rel_exp GT pure_cons_exp .  (74)
+
+	.  reduce 74
+
+
+state 121
+	rel_exp : pure_rel_exp LEQ cons_exp .  (35)
+
+	.  reduce 35
+
+
+state 122
+	pure_rel_exp : pure_rel_exp LEQ pure_cons_exp .  (78)
+
+	.  reduce 78
+
+
+state 123
+	rel_exp : pure_rel_exp GEQ cons_exp .  (36)
+
+	.  reduce 36
+
+
+state 124
+	pure_rel_exp : pure_rel_exp GEQ pure_cons_exp .  (77)
+
+	.  reduce 77
+
+
+state 125
+	rel_exp : pure_rel_exp EQUALS cons_exp .  (33)
+
+	.  reduce 33
+
+
+state 126
+	pure_rel_exp : pure_rel_exp EQUALS pure_cons_exp .  (75)
+
+	.  reduce 75
+
+
+state 127
+	rel_exp : pure_rel_exp NEQ cons_exp .  (37)
+
+	.  reduce 37
+
+
+state 128
+	pure_rel_exp : pure_rel_exp NEQ pure_cons_exp .  (79)
+
+	.  reduce 79
+
+
+state 129
+	cons_exp : pure_add_exp DCOLON cons_exp .  (39)
+
+	.  reduce 39
+
+
+state 130
+	pure_cons_exp : pure_add_exp DCOLON pure_cons_exp .  (81)
+
+	.  reduce 81
+
+
+state 131
+	add_exp : pure_add_exp plus_minus mult_exp .  (41)
+
+	.  reduce 41
+
+
+state 132
+	mult_exp : pure_mult_exp . times_div expo_exp  (43)
+	pure_add_exp : pure_add_exp plus_minus pure_mult_exp .  (83)
+	pure_mult_exp : pure_mult_exp . times_div pure_expo_exp  (85)
+
+	TIMES  shift 87
+	DIV  shift 88
+	DTIMES  shift 89
+	DDIV  shift 90
+	MOD  shift 91
+	PLUS  reduce 83
+	MINUS  reduce 83
+	DPLUS  reduce 83
+	DMINUS  reduce 83
+	CARAT  reduce 83
+	LT  reduce 83
+	GT  reduce 83
+	LEQ  reduce 83
+	GEQ  reduce 83
+	EQUALS  reduce 83
+	NEQ  reduce 83
+	DCOLON  reduce 83
+	LOGICALAND  reduce 83
+	LOGICALOR  reduce 83
+
+	times_div  goto 92
+
+
+state 133
+	mult_exp : pure_mult_exp times_div expo_exp .  (43)
+
+	.  reduce 43
+
+
+state 134
+	pure_mult_exp : pure_mult_exp times_div pure_expo_exp .  (85)
+
+	.  reduce 85
+
+
+state 135
+	expo_exp : pure_app_raise_exp EXP expo_exp .  (45)
+
+	.  reduce 45
+
+
+state 136
+	pure_expo_exp : pure_app_raise_exp EXP pure_expo_exp .  (87)
+
+	.  reduce 87
+
+
+state 137
+	main : LET IDENT EQUALS expression . DSEMI  (2)
+	if_let_fun_try_monop_exp : LET IDENT EQUALS expression . IN expression  (60)
+
+	DSEMI  shift 153
+	IN  shift 154
+	.  error
+
+
+state 138
+	main : LET REC IDENT IDENT . EQUALS expression DSEMI  (3)
+	if_let_fun_try_monop_exp : LET REC IDENT IDENT . EQUALS expression IN expression  (59)
+
+	EQUALS  shift 155
+	.  error
+
+
+state 139
+	if_let_fun_try_monop_exp : LET IDENT EQUALS . expression IN expression  (60)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 56
+	IF  shift 12
+	FUN  shift 13
+	RAISE  shift 14
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	expression  goto 156
+	constant_expression  goto 26
+	monop  goto 27
+	op_exp  goto 28
+	pure_or_exp  goto 29
+	and_exp  goto 30
+	pure_and_exp  goto 31
+	rel_exp  goto 32
+	pure_rel_exp  goto 33
+	cons_exp  goto 34
+	pure_add_exp  goto 35
+	add_exp  goto 36
+	mult_exp  goto 37
+	pure_mult_exp  goto 38
+	expo_exp  goto 39
+	pure_app_raise_exp  goto 40
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 46
+	atomic_expression  goto 47
+	pure_eq_exp  goto 48
+	pure_cons_exp  goto 49
+	pure_expo_exp  goto 50
+	pure_monop_raise  goto 51
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 140
+	if_let_fun_try_monop_exp : LET REC IDENT . IDENT EQUALS expression IN expression  (59)
+
+	IDENT  shift 157
+	.  error
+
+
+state 141
+	if_let_fun_try_monop_exp : IF expression THEN expression . ELSE expression  (62)
+
+	ELSE  shift 158
+	.  error
+
+
+state 142
+	if_let_fun_try_monop_exp : FUN IDENT ARROW expression .  (61)
+
+	.  reduce 61
+
+
+state 143
+	pat : INT .  (68)
+
+	.  reduce 68
+
+
+state 144
+	pat : UNDERSCORE .  (67)
+
+	.  reduce 67
+
+
+state 145
+	if_let_fun_try_monop_exp : TRY expression WITH exp_matches .  (58)
+
+	.  reduce 58
+
+
+state 146
+	exp_matches : exp_match .  (64)
+
+	.  reduce 64
+
+
+state 147
+	exp_matches : no_try_exp_match . PIPE exp_matches  (65)
+
+	PIPE  shift 159
+	.  error
+
+
+state 148
+	exp_match : pat . ARROW expression  (66)
+	no_try_exp_match : pat . ARROW no_try_expression  (96)
+
+	ARROW  shift 160
+	.  error
+
+
+state 149
+	list_tail : RBRAC .  (142)
+
+	.  reduce 142
+
+
+state 150
+	list_tail : list_contents .  (143)
+
+	.  reduce 143
+
+
+state 151
+	list_exp_end : SEMI list_tail .  (141)
+
+	.  reduce 141
+
+
+state 152
+	par_exp_end : expression COMMA expression . RPAREN  (148)
+
+	RPAREN  shift 161
+	.  error
+
+
+state 153
+	main : LET IDENT EQUALS expression DSEMI .  (2)
+
+	.  reduce 2
+
+
+state 154
+	if_let_fun_try_monop_exp : LET IDENT EQUALS expression IN . expression  (60)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 56
+	IF  shift 12
+	FUN  shift 13
+	RAISE  shift 14
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	expression  goto 162
+	constant_expression  goto 26
+	monop  goto 27
+	op_exp  goto 28
+	pure_or_exp  goto 29
+	and_exp  goto 30
+	pure_and_exp  goto 31
+	rel_exp  goto 32
+	pure_rel_exp  goto 33
+	cons_exp  goto 34
+	pure_add_exp  goto 35
+	add_exp  goto 36
+	mult_exp  goto 37
+	pure_mult_exp  goto 38
+	expo_exp  goto 39
+	pure_app_raise_exp  goto 40
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 46
+	atomic_expression  goto 47
+	pure_eq_exp  goto 48
+	pure_cons_exp  goto 49
+	pure_expo_exp  goto 50
+	pure_monop_raise  goto 51
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 155
+	main : LET REC IDENT IDENT EQUALS . expression DSEMI  (3)
+	if_let_fun_try_monop_exp : LET REC IDENT IDENT EQUALS . expression IN expression  (59)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 56
+	IF  shift 12
+	FUN  shift 13
+	RAISE  shift 14
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	expression  goto 163
+	constant_expression  goto 26
+	monop  goto 27
+	op_exp  goto 28
+	pure_or_exp  goto 29
+	and_exp  goto 30
+	pure_and_exp  goto 31
+	rel_exp  goto 32
+	pure_rel_exp  goto 33
+	cons_exp  goto 34
+	pure_add_exp  goto 35
+	add_exp  goto 36
+	mult_exp  goto 37
+	pure_mult_exp  goto 38
+	expo_exp  goto 39
+	pure_app_raise_exp  goto 40
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 46
+	atomic_expression  goto 47
+	pure_eq_exp  goto 48
+	pure_cons_exp  goto 49
+	pure_expo_exp  goto 50
+	pure_monop_raise  goto 51
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 156
+	if_let_fun_try_monop_exp : LET IDENT EQUALS expression . IN expression  (60)
+
+	IN  shift 154
+	.  error
+
+
+state 157
+	if_let_fun_try_monop_exp : LET REC IDENT IDENT . EQUALS expression IN expression  (59)
+
+	EQUALS  shift 164
+	.  error
+
+
+state 158
+	if_let_fun_try_monop_exp : IF expression THEN expression ELSE . expression  (62)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 56
+	IF  shift 12
+	FUN  shift 13
+	RAISE  shift 14
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	expression  goto 165
+	constant_expression  goto 26
+	monop  goto 27
+	op_exp  goto 28
+	pure_or_exp  goto 29
+	and_exp  goto 30
+	pure_and_exp  goto 31
+	rel_exp  goto 32
+	pure_rel_exp  goto 33
+	cons_exp  goto 34
+	pure_add_exp  goto 35
+	add_exp  goto 36
+	mult_exp  goto 37
+	pure_mult_exp  goto 38
+	expo_exp  goto 39
+	pure_app_raise_exp  goto 40
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 46
+	atomic_expression  goto 47
+	pure_eq_exp  goto 48
+	pure_cons_exp  goto 49
+	pure_expo_exp  goto 50
+	pure_monop_raise  goto 51
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 159
+	exp_matches : no_try_exp_match PIPE . exp_matches  (65)
+
+	INT  shift 143
+	UNDERSCORE  shift 144
+	.  error
+
+	exp_matches  goto 166
+	exp_match  goto 146
+	no_try_exp_match  goto 147
+	pat  goto 148
+
+
+state 160
+	exp_match : pat ARROW . expression  (66)
+	no_try_exp_match : pat ARROW . no_try_expression  (96)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 167
+	IF  shift 168
+	FUN  shift 169
+	RAISE  shift 170
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	expression  goto 171
+	constant_expression  goto 26
+	monop  goto 172
+	op_exp  goto 28
+	pure_or_exp  goto 173
+	and_exp  goto 30
+	pure_and_exp  goto 174
+	rel_exp  goto 32
+	pure_rel_exp  goto 175
+	cons_exp  goto 34
+	pure_add_exp  goto 176
+	add_exp  goto 36
+	mult_exp  goto 37
+	pure_mult_exp  goto 177
+	expo_exp  goto 39
+	pure_app_raise_exp  goto 178
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 179
+	atomic_expression  goto 180
+	pure_eq_exp  goto 48
+	pure_cons_exp  goto 49
+	pure_expo_exp  goto 50
+	pure_monop_raise  goto 51
+	no_try_expression  goto 181
+	no_try_op_exp  goto 182
+	no_try_and_exp  goto 183
+	no_try_eq_exp  goto 184
+	no_try_rel_exp  goto 185
+	no_try_cons_exp  goto 186
+	no_try_add_exp  goto 187
+	no_try_mult_exp  goto 188
+	no_try_expo_exp  goto 189
+	no_try_nonop_exp  goto 190
+	no_try_if_let_fun_monop_exp  goto 191
+	no_try_app_raise_expression  goto 192
+	no_try_app_expression  goto 193
+	no_try_monop_expression  goto 194
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 161
+	par_exp_end : expression COMMA expression RPAREN .  (148)
+
+	.  reduce 148
+
+
+state 162
+	if_let_fun_try_monop_exp : LET IDENT EQUALS expression IN expression .  (60)
+
+	.  reduce 60
+
+
+state 163
+	main : LET REC IDENT IDENT EQUALS expression . DSEMI  (3)
+	if_let_fun_try_monop_exp : LET REC IDENT IDENT EQUALS expression . IN expression  (59)
+
+	DSEMI  shift 195
+	IN  shift 196
+	.  error
+
+
+state 164
+	if_let_fun_try_monop_exp : LET REC IDENT IDENT EQUALS . expression IN expression  (59)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 56
+	IF  shift 12
+	FUN  shift 13
+	RAISE  shift 14
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	expression  goto 197
+	constant_expression  goto 26
+	monop  goto 27
+	op_exp  goto 28
+	pure_or_exp  goto 29
+	and_exp  goto 30
+	pure_and_exp  goto 31
+	rel_exp  goto 32
+	pure_rel_exp  goto 33
+	cons_exp  goto 34
+	pure_add_exp  goto 35
+	add_exp  goto 36
+	mult_exp  goto 37
+	pure_mult_exp  goto 38
+	expo_exp  goto 39
+	pure_app_raise_exp  goto 40
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 46
+	atomic_expression  goto 47
+	pure_eq_exp  goto 48
+	pure_cons_exp  goto 49
+	pure_expo_exp  goto 50
+	pure_monop_raise  goto 51
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 165
+	if_let_fun_try_monop_exp : IF expression THEN expression ELSE expression .  (62)
+
+	.  reduce 62
+
+
+state 166
+	exp_matches : no_try_exp_match PIPE exp_matches .  (65)
+
+	.  reduce 65
+
+
+state 167
+	if_let_fun_try_monop_exp : LET . REC IDENT IDENT EQUALS expression IN expression  (59)
+	if_let_fun_try_monop_exp : LET . IDENT EQUALS expression IN expression  (60)
+	no_try_if_let_fun_monop_exp : LET . IDENT EQUALS expression IN no_try_expression  (130)
+	no_try_if_let_fun_monop_exp : LET . REC IDENT IDENT EQUALS expression IN no_try_expression  (131)
+
+	IDENT  shift 198
+	REC  shift 199
+	.  error
+
+
+state 168
+	if_let_fun_try_monop_exp : IF . expression THEN expression ELSE expression  (62)
+	no_try_if_let_fun_monop_exp : IF . expression THEN expression ELSE no_try_expression  (129)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 56
+	IF  shift 12
+	FUN  shift 13
+	RAISE  shift 14
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	expression  goto 200
+	constant_expression  goto 26
+	monop  goto 27
+	op_exp  goto 28
+	pure_or_exp  goto 29
+	and_exp  goto 30
+	pure_and_exp  goto 31
+	rel_exp  goto 32
+	pure_rel_exp  goto 33
+	cons_exp  goto 34
+	pure_add_exp  goto 35
+	add_exp  goto 36
+	mult_exp  goto 37
+	pure_mult_exp  goto 38
+	expo_exp  goto 39
+	pure_app_raise_exp  goto 40
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 46
+	atomic_expression  goto 47
+	pure_eq_exp  goto 48
+	pure_cons_exp  goto 49
+	pure_expo_exp  goto 50
+	pure_monop_raise  goto 51
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 169
+	if_let_fun_try_monop_exp : FUN . IDENT ARROW expression  (61)
+	no_try_if_let_fun_monop_exp : FUN . IDENT ARROW no_try_expression  (132)
+
+	IDENT  shift 201
+	.  error
+
+
+state 170
+	monop_raise : RAISE . nonop_exp  (53)
+	pure_monop_raise : RAISE . pure_app_raise_exp  (93)
+	no_try_monop_expression : RAISE . no_try_app_raise_expression  (124)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 56
+	IF  shift 12
+	FUN  shift 13
+	RAISE  shift 170
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	constant_expression  goto 26
+	monop  goto 202
+	pure_app_raise_exp  goto 59
+	nonop_exp  goto 60
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 179
+	atomic_expression  goto 180
+	pure_monop_raise  goto 51
+	no_try_app_raise_expression  goto 203
+	no_try_app_expression  goto 193
+	no_try_monop_expression  goto 194
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 171
+	exp_match : pat ARROW expression .  (66)
+
+	.  reduce 66
+
+
+state 172
+	monop_raise : monop . RAISE nonop_exp  (52)
+	if_let_fun_try_monop_exp : monop . if_let_fun_try_monop_exp  (63)
+	pure_monop_raise : monop . RAISE pure_app_raise_exp  (92)
+	no_try_monop_expression : monop . RAISE no_try_app_raise_expression  (123)
+	no_try_if_let_fun_monop_exp : monop . no_try_if_let_fun_monop_exp  (133)
+	atomic_expression : monop . atomic_expression  (138)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 167
+	IF  shift 168
+	FUN  shift 169
+	RAISE  shift 204
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	constant_expression  goto 26
+	monop  goto 205
+	if_let_fun_try_monop_exp  goto 70
+	atomic_expression  goto 71
+	no_try_if_let_fun_monop_exp  goto 206
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 173
+	op_exp : pure_or_exp . LOGICALOR and_exp  (28)
+	pure_or_exp : pure_or_exp . LOGICALOR pure_and_exp  (69)
+	no_try_op_exp : pure_or_exp . LOGICALOR no_try_and_exp  (98)
+
+	LOGICALOR  shift 207
+	.  error
+
+
+state 174
+	and_exp : pure_and_exp . LOGICALAND rel_exp  (30)
+	pure_or_exp : pure_and_exp .  (70)
+	pure_and_exp : pure_and_exp . LOGICALAND pure_eq_exp  (71)
+	no_try_and_exp : pure_and_exp . LOGICALAND no_try_eq_exp  (100)
+
+	LOGICALAND  shift 208
+	LOGICALOR  reduce 70
+
+
+state 175
+	rel_exp : pure_rel_exp . GT cons_exp  (32)
+	rel_exp : pure_rel_exp . EQUALS cons_exp  (33)
+	rel_exp : pure_rel_exp . LT cons_exp  (34)
+	rel_exp : pure_rel_exp . LEQ cons_exp  (35)
+	rel_exp : pure_rel_exp . GEQ cons_exp  (36)
+	rel_exp : pure_rel_exp . NEQ cons_exp  (37)
+	pure_eq_exp : pure_rel_exp .  (73)
+	pure_rel_exp : pure_rel_exp . GT pure_cons_exp  (74)
+	pure_rel_exp : pure_rel_exp . EQUALS pure_cons_exp  (75)
+	pure_rel_exp : pure_rel_exp . LT pure_cons_exp  (76)
+	pure_rel_exp : pure_rel_exp . GEQ pure_cons_exp  (77)
+	pure_rel_exp : pure_rel_exp . LEQ pure_cons_exp  (78)
+	pure_rel_exp : pure_rel_exp . NEQ pure_cons_exp  (79)
+	no_try_rel_exp : pure_rel_exp . GT no_try_cons_exp  (103)
+	no_try_rel_exp : pure_rel_exp . EQUALS no_try_cons_exp  (104)
+	no_try_rel_exp : pure_rel_exp . LT no_try_cons_exp  (105)
+	no_try_rel_exp : pure_rel_exp . GEQ no_try_cons_exp  (106)
+	no_try_rel_exp : pure_rel_exp . LEQ no_try_cons_exp  (107)
+	no_try_rel_exp : pure_rel_exp . NEQ no_try_cons_exp  (108)
+
+	LT  shift 209
+	GT  shift 210
+	LEQ  shift 211
+	GEQ  shift 212
+	EQUALS  shift 213
+	NEQ  shift 214
+	LOGICALAND  reduce 73
+	LOGICALOR  reduce 73
+
+
+state 176
+	cons_exp : pure_add_exp . DCOLON cons_exp  (39)
+	add_exp : pure_add_exp . plus_minus mult_exp  (41)
+	pure_cons_exp : pure_add_exp . DCOLON pure_cons_exp  (81)
+	pure_cons_exp : pure_add_exp .  (82)
+	pure_add_exp : pure_add_exp . plus_minus pure_mult_exp  (83)
+	no_try_cons_exp : pure_add_exp . DCOLON no_try_cons_exp  (110)
+	no_try_add_exp : pure_add_exp . plus_minus no_try_mult_exp  (112)
+
+	PLUS  shift 80
+	MINUS  shift 81
+	DPLUS  shift 82
+	DMINUS  shift 83
+	CARAT  shift 84
+	DCOLON  shift 215
+	LT  reduce 82
+	GT  reduce 82
+	LEQ  reduce 82
+	GEQ  reduce 82
+	EQUALS  reduce 82
+	NEQ  reduce 82
+	LOGICALAND  reduce 82
+	LOGICALOR  reduce 82
+
+	plus_minus  goto 216
+
+
+state 177
+	mult_exp : pure_mult_exp . times_div expo_exp  (43)
+	pure_add_exp : pure_mult_exp .  (84)
+	pure_mult_exp : pure_mult_exp . times_div pure_expo_exp  (85)
+	no_try_mult_exp : pure_mult_exp . times_div no_try_expo_exp  (114)
+
+	TIMES  shift 87
+	DIV  shift 88
+	DTIMES  shift 89
+	DDIV  shift 90
+	MOD  shift 91
+	PLUS  reduce 84
+	MINUS  reduce 84
+	DPLUS  reduce 84
+	DMINUS  reduce 84
+	CARAT  reduce 84
+	LT  reduce 84
+	GT  reduce 84
+	LEQ  reduce 84
+	GEQ  reduce 84
+	EQUALS  reduce 84
+	NEQ  reduce 84
+	DCOLON  reduce 84
+	LOGICALAND  reduce 84
+	LOGICALOR  reduce 84
+
+	times_div  goto 217
+
+
+state 178
+	expo_exp : pure_app_raise_exp . EXP expo_exp  (45)
+	pure_expo_exp : pure_app_raise_exp . EXP pure_expo_exp  (87)
+	pure_expo_exp : pure_app_raise_exp .  (88)
+	no_try_expo_exp : pure_app_raise_exp . EXP no_try_expo_exp  (116)
+
+	EXP  shift 218
+	PLUS  reduce 88
+	MINUS  reduce 88
+	TIMES  reduce 88
+	DIV  reduce 88
+	DPLUS  reduce 88
+	DMINUS  reduce 88
+	DTIMES  reduce 88
+	DDIV  reduce 88
+	MOD  reduce 88
+	CARAT  reduce 88
+	LT  reduce 88
+	GT  reduce 88
+	LEQ  reduce 88
+	GEQ  reduce 88
+	EQUALS  reduce 88
+	NEQ  reduce 88
+	DCOLON  reduce 88
+	LOGICALAND  reduce 88
+	LOGICALOR  reduce 88
+
+
+state 179
+	app_raise_exp : pure_app_exp . monop_raise  (51)
+	app_exp : pure_app_exp . nonapp_exp  (55)
+	pure_app_raise_exp : pure_app_exp .  (89)
+	pure_app_raise_exp : pure_app_exp . pure_monop_raise  (91)
+	pure_app_exp : pure_app_exp . atomic_expression  (95)
+	no_try_app_raise_expression : pure_app_exp . no_try_monop_expression  (122)
+	no_try_app_expression : pure_app_exp . no_try_nonapp_expression  (126)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 167
+	IF  shift 168
+	FUN  shift 169
+	RAISE  shift 170
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	PLUS  reduce 89
+	MINUS  reduce 89
+	TIMES  reduce 89
+	DIV  reduce 89
+	DPLUS  reduce 89
+	DMINUS  reduce 89
+	DTIMES  reduce 89
+	DDIV  reduce 89
+	MOD  reduce 89
+	EXP  reduce 89
+	CARAT  reduce 89
+	LT  reduce 89
+	GT  reduce 89
+	LEQ  reduce 89
+	GEQ  reduce 89
+	EQUALS  reduce 89
+	NEQ  reduce 89
+	DCOLON  reduce 89
+	LOGICALAND  reduce 89
+	LOGICALOR  reduce 89
+
+	constant_expression  goto 26
+	monop  goto 172
+	if_let_fun_try_monop_exp  goto 94
+	monop_raise  goto 95
+	atomic_expression  goto 219
+	nonapp_exp  goto 97
+	pure_monop_raise  goto 98
+	no_try_if_let_fun_monop_exp  goto 220
+	no_try_monop_expression  goto 221
+	no_try_nonapp_expression  goto 222
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 180
+	app_exp : atomic_expression .  (54)
+	pure_app_exp : atomic_expression .  (94)
+	no_try_app_expression : atomic_expression .  (125)
+
+	INT  reduce 94
+	FLOAT  reduce 94
+	STRING  reduce 94
+	IDENT  reduce 94
+	TRUE  reduce 94
+	FALSE  reduce 94
+	NEG  reduce 94
+	PLUS  reduce 94
+	MINUS  reduce 94
+	TIMES  reduce 94
+	DIV  reduce 94
+	DPLUS  reduce 94
+	DMINUS  reduce 94
+	DTIMES  reduce 94
+	DDIV  reduce 94
+	MOD  reduce 94
+	EXP  reduce 94
+	CARAT  reduce 94
+	LT  reduce 94
+	GT  reduce 94
+	LEQ  reduce 94
+	GEQ  reduce 94
+	EQUALS  reduce 94
+	NEQ  reduce 94
+	PIPE  reduce 125
+	SEMI  reduce 54
+	DSEMI  reduce 54
+	DCOLON  reduce 94
+	NIL  reduce 94
+	LET  reduce 94
+	IN  reduce 54
+	IF  reduce 94
+	THEN  reduce 54
+	ELSE  reduce 54
+	FUN  reduce 94
+	RAISE  reduce 94
+	TRY  reduce 94
+	WITH  reduce 54
+	LOGICALAND  reduce 94
+	LOGICALOR  reduce 94
+	LBRAC  reduce 94
+	RBRAC  reduce 54
+	LPAREN  reduce 94
+	RPAREN  reduce 54
+	COMMA  reduce 54
+	UNIT  reduce 94
+	HEAD  reduce 94
+	TAIL  reduce 94
+	PRINT  reduce 94
+	FST  reduce 94
+	SND  reduce 94
+
+
+state 181
+	no_try_exp_match : pat ARROW no_try_expression .  (96)
+
+	.  reduce 96
+
+
+state 182
+	no_try_expression : no_try_op_exp .  (97)
+
+	.  reduce 97
+
+
+state 183
+	no_try_op_exp : no_try_and_exp .  (99)
+
+	.  reduce 99
+
+
+state 184
+	no_try_and_exp : no_try_eq_exp .  (101)
+
+	.  reduce 101
+
+
+state 185
+	no_try_eq_exp : no_try_rel_exp .  (102)
+
+	.  reduce 102
+
+
+state 186
+	no_try_rel_exp : no_try_cons_exp .  (109)
+
+	.  reduce 109
+
+
+state 187
+	no_try_cons_exp : no_try_add_exp .  (111)
+
+	.  reduce 111
+
+
+state 188
+	no_try_add_exp : no_try_mult_exp .  (113)
+
+	.  reduce 113
+
+
+state 189
+	no_try_mult_exp : no_try_expo_exp .  (115)
+
+	.  reduce 115
+
+
+state 190
+	no_try_expo_exp : no_try_nonop_exp .  (117)
+
+	.  reduce 117
+
+
+state 191
+	no_try_nonop_exp : no_try_if_let_fun_monop_exp .  (118)
+
+	.  reduce 118
+
+
+state 192
+	no_try_nonop_exp : no_try_app_raise_expression .  (119)
+
+	.  reduce 119
+
+
+state 193
+	no_try_app_raise_expression : no_try_app_expression .  (120)
+
+	.  reduce 120
+
+
+state 194
+	no_try_app_raise_expression : no_try_monop_expression .  (121)
+
+	.  reduce 121
+
+
+state 195
+	main : LET REC IDENT IDENT EQUALS expression DSEMI .  (3)
+
+	.  reduce 3
+
+
+state 196
+	if_let_fun_try_monop_exp : LET REC IDENT IDENT EQUALS expression IN . expression  (59)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 56
+	IF  shift 12
+	FUN  shift 13
+	RAISE  shift 14
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	expression  goto 223
+	constant_expression  goto 26
+	monop  goto 27
+	op_exp  goto 28
+	pure_or_exp  goto 29
+	and_exp  goto 30
+	pure_and_exp  goto 31
+	rel_exp  goto 32
+	pure_rel_exp  goto 33
+	cons_exp  goto 34
+	pure_add_exp  goto 35
+	add_exp  goto 36
+	mult_exp  goto 37
+	pure_mult_exp  goto 38
+	expo_exp  goto 39
+	pure_app_raise_exp  goto 40
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 46
+	atomic_expression  goto 47
+	pure_eq_exp  goto 48
+	pure_cons_exp  goto 49
+	pure_expo_exp  goto 50
+	pure_monop_raise  goto 51
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 197
+	if_let_fun_try_monop_exp : LET REC IDENT IDENT EQUALS expression . IN expression  (59)
+
+	IN  shift 196
+	.  error
+
+
+state 198
+	if_let_fun_try_monop_exp : LET IDENT . EQUALS expression IN expression  (60)
+	no_try_if_let_fun_monop_exp : LET IDENT . EQUALS expression IN no_try_expression  (130)
+
+	EQUALS  shift 224
+	.  error
+
+
+state 199
+	if_let_fun_try_monop_exp : LET REC . IDENT IDENT EQUALS expression IN expression  (59)
+	no_try_if_let_fun_monop_exp : LET REC . IDENT IDENT EQUALS expression IN no_try_expression  (131)
+
+	IDENT  shift 225
+	.  error
+
+
+state 200
+	if_let_fun_try_monop_exp : IF expression . THEN expression ELSE expression  (62)
+	no_try_if_let_fun_monop_exp : IF expression . THEN expression ELSE no_try_expression  (129)
+
+	THEN  shift 226
+	.  error
+
+
+state 201
+	if_let_fun_try_monop_exp : FUN IDENT . ARROW expression  (61)
+	no_try_if_let_fun_monop_exp : FUN IDENT . ARROW no_try_expression  (132)
+
+	ARROW  shift 227
+	.  error
+
+
+state 202
+	monop_raise : monop . RAISE nonop_exp  (52)
+	if_let_fun_try_monop_exp : monop . if_let_fun_try_monop_exp  (63)
+	pure_monop_raise : monop . RAISE pure_app_raise_exp  (92)
+	no_try_monop_expression : monop . RAISE no_try_app_raise_expression  (123)
+	atomic_expression : monop . atomic_expression  (138)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 56
+	IF  shift 12
+	FUN  shift 13
+	RAISE  shift 204
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	constant_expression  goto 26
+	monop  goto 69
+	if_let_fun_try_monop_exp  goto 70
+	atomic_expression  goto 71
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 203
+	no_try_monop_expression : RAISE no_try_app_raise_expression .  (124)
+
+	.  reduce 124
+
+
+state 204
+	monop_raise : monop RAISE . nonop_exp  (52)
+	pure_monop_raise : monop RAISE . pure_app_raise_exp  (92)
+	no_try_monop_expression : monop RAISE . no_try_app_raise_expression  (123)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 56
+	IF  shift 12
+	FUN  shift 13
+	RAISE  shift 170
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	constant_expression  goto 26
+	monop  goto 202
+	pure_app_raise_exp  goto 111
+	nonop_exp  goto 112
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 179
+	atomic_expression  goto 180
+	pure_monop_raise  goto 51
+	no_try_app_raise_expression  goto 228
+	no_try_app_expression  goto 193
+	no_try_monop_expression  goto 194
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 205
+	if_let_fun_try_monop_exp : monop . if_let_fun_try_monop_exp  (63)
+	no_try_if_let_fun_monop_exp : monop . no_try_if_let_fun_monop_exp  (133)
+	atomic_expression : monop . atomic_expression  (138)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 167
+	IF  shift 168
+	FUN  shift 169
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	constant_expression  goto 26
+	monop  goto 205
+	if_let_fun_try_monop_exp  goto 70
+	atomic_expression  goto 71
+	no_try_if_let_fun_monop_exp  goto 206
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 206
+	no_try_if_let_fun_monop_exp : monop no_try_if_let_fun_monop_exp .  (133)
+
+	.  reduce 133
+
+
+state 207
+	op_exp : pure_or_exp LOGICALOR . and_exp  (28)
+	pure_or_exp : pure_or_exp LOGICALOR . pure_and_exp  (69)
+	no_try_op_exp : pure_or_exp LOGICALOR . no_try_and_exp  (98)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 167
+	IF  shift 168
+	FUN  shift 169
+	RAISE  shift 170
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	constant_expression  goto 26
+	monop  goto 172
+	and_exp  goto 113
+	pure_and_exp  goto 229
+	rel_exp  goto 32
+	pure_rel_exp  goto 175
+	cons_exp  goto 34
+	pure_add_exp  goto 176
+	add_exp  goto 36
+	mult_exp  goto 37
+	pure_mult_exp  goto 177
+	expo_exp  goto 39
+	pure_app_raise_exp  goto 178
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 179
+	atomic_expression  goto 180
+	pure_eq_exp  goto 48
+	pure_cons_exp  goto 49
+	pure_expo_exp  goto 50
+	pure_monop_raise  goto 51
+	no_try_and_exp  goto 230
+	no_try_eq_exp  goto 184
+	no_try_rel_exp  goto 185
+	no_try_cons_exp  goto 186
+	no_try_add_exp  goto 187
+	no_try_mult_exp  goto 188
+	no_try_expo_exp  goto 189
+	no_try_nonop_exp  goto 190
+	no_try_if_let_fun_monop_exp  goto 191
+	no_try_app_raise_expression  goto 192
+	no_try_app_expression  goto 193
+	no_try_monop_expression  goto 194
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 208
+	and_exp : pure_and_exp LOGICALAND . rel_exp  (30)
+	pure_and_exp : pure_and_exp LOGICALAND . pure_eq_exp  (71)
+	no_try_and_exp : pure_and_exp LOGICALAND . no_try_eq_exp  (100)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 167
+	IF  shift 168
+	FUN  shift 169
+	RAISE  shift 170
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	constant_expression  goto 26
+	monop  goto 172
+	rel_exp  goto 115
+	pure_rel_exp  goto 175
+	cons_exp  goto 34
+	pure_add_exp  goto 176
+	add_exp  goto 36
+	mult_exp  goto 37
+	pure_mult_exp  goto 177
+	expo_exp  goto 39
+	pure_app_raise_exp  goto 178
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 179
+	atomic_expression  goto 180
+	pure_eq_exp  goto 116
+	pure_cons_exp  goto 49
+	pure_expo_exp  goto 50
+	pure_monop_raise  goto 51
+	no_try_eq_exp  goto 231
+	no_try_rel_exp  goto 185
+	no_try_cons_exp  goto 186
+	no_try_add_exp  goto 187
+	no_try_mult_exp  goto 188
+	no_try_expo_exp  goto 189
+	no_try_nonop_exp  goto 190
+	no_try_if_let_fun_monop_exp  goto 191
+	no_try_app_raise_expression  goto 192
+	no_try_app_expression  goto 193
+	no_try_monop_expression  goto 194
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 209
+	rel_exp : pure_rel_exp LT . cons_exp  (34)
+	pure_rel_exp : pure_rel_exp LT . pure_cons_exp  (76)
+	no_try_rel_exp : pure_rel_exp LT . no_try_cons_exp  (105)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 167
+	IF  shift 168
+	FUN  shift 169
+	RAISE  shift 170
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	constant_expression  goto 26
+	monop  goto 172
+	cons_exp  goto 117
+	pure_add_exp  goto 176
+	add_exp  goto 36
+	mult_exp  goto 37
+	pure_mult_exp  goto 177
+	expo_exp  goto 39
+	pure_app_raise_exp  goto 178
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 179
+	atomic_expression  goto 180
+	pure_cons_exp  goto 118
+	pure_expo_exp  goto 50
+	pure_monop_raise  goto 51
+	no_try_cons_exp  goto 232
+	no_try_add_exp  goto 187
+	no_try_mult_exp  goto 188
+	no_try_expo_exp  goto 189
+	no_try_nonop_exp  goto 190
+	no_try_if_let_fun_monop_exp  goto 191
+	no_try_app_raise_expression  goto 192
+	no_try_app_expression  goto 193
+	no_try_monop_expression  goto 194
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 210
+	rel_exp : pure_rel_exp GT . cons_exp  (32)
+	pure_rel_exp : pure_rel_exp GT . pure_cons_exp  (74)
+	no_try_rel_exp : pure_rel_exp GT . no_try_cons_exp  (103)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 167
+	IF  shift 168
+	FUN  shift 169
+	RAISE  shift 170
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	constant_expression  goto 26
+	monop  goto 172
+	cons_exp  goto 119
+	pure_add_exp  goto 176
+	add_exp  goto 36
+	mult_exp  goto 37
+	pure_mult_exp  goto 177
+	expo_exp  goto 39
+	pure_app_raise_exp  goto 178
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 179
+	atomic_expression  goto 180
+	pure_cons_exp  goto 120
+	pure_expo_exp  goto 50
+	pure_monop_raise  goto 51
+	no_try_cons_exp  goto 233
+	no_try_add_exp  goto 187
+	no_try_mult_exp  goto 188
+	no_try_expo_exp  goto 189
+	no_try_nonop_exp  goto 190
+	no_try_if_let_fun_monop_exp  goto 191
+	no_try_app_raise_expression  goto 192
+	no_try_app_expression  goto 193
+	no_try_monop_expression  goto 194
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 211
+	rel_exp : pure_rel_exp LEQ . cons_exp  (35)
+	pure_rel_exp : pure_rel_exp LEQ . pure_cons_exp  (78)
+	no_try_rel_exp : pure_rel_exp LEQ . no_try_cons_exp  (107)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 167
+	IF  shift 168
+	FUN  shift 169
+	RAISE  shift 170
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	constant_expression  goto 26
+	monop  goto 172
+	cons_exp  goto 121
+	pure_add_exp  goto 176
+	add_exp  goto 36
+	mult_exp  goto 37
+	pure_mult_exp  goto 177
+	expo_exp  goto 39
+	pure_app_raise_exp  goto 178
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 179
+	atomic_expression  goto 180
+	pure_cons_exp  goto 122
+	pure_expo_exp  goto 50
+	pure_monop_raise  goto 51
+	no_try_cons_exp  goto 234
+	no_try_add_exp  goto 187
+	no_try_mult_exp  goto 188
+	no_try_expo_exp  goto 189
+	no_try_nonop_exp  goto 190
+	no_try_if_let_fun_monop_exp  goto 191
+	no_try_app_raise_expression  goto 192
+	no_try_app_expression  goto 193
+	no_try_monop_expression  goto 194
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 212
+	rel_exp : pure_rel_exp GEQ . cons_exp  (36)
+	pure_rel_exp : pure_rel_exp GEQ . pure_cons_exp  (77)
+	no_try_rel_exp : pure_rel_exp GEQ . no_try_cons_exp  (106)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 167
+	IF  shift 168
+	FUN  shift 169
+	RAISE  shift 170
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	constant_expression  goto 26
+	monop  goto 172
+	cons_exp  goto 123
+	pure_add_exp  goto 176
+	add_exp  goto 36
+	mult_exp  goto 37
+	pure_mult_exp  goto 177
+	expo_exp  goto 39
+	pure_app_raise_exp  goto 178
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 179
+	atomic_expression  goto 180
+	pure_cons_exp  goto 124
+	pure_expo_exp  goto 50
+	pure_monop_raise  goto 51
+	no_try_cons_exp  goto 235
+	no_try_add_exp  goto 187
+	no_try_mult_exp  goto 188
+	no_try_expo_exp  goto 189
+	no_try_nonop_exp  goto 190
+	no_try_if_let_fun_monop_exp  goto 191
+	no_try_app_raise_expression  goto 192
+	no_try_app_expression  goto 193
+	no_try_monop_expression  goto 194
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 213
+	rel_exp : pure_rel_exp EQUALS . cons_exp  (33)
+	pure_rel_exp : pure_rel_exp EQUALS . pure_cons_exp  (75)
+	no_try_rel_exp : pure_rel_exp EQUALS . no_try_cons_exp  (104)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 167
+	IF  shift 168
+	FUN  shift 169
+	RAISE  shift 170
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	constant_expression  goto 26
+	monop  goto 172
+	cons_exp  goto 125
+	pure_add_exp  goto 176
+	add_exp  goto 36
+	mult_exp  goto 37
+	pure_mult_exp  goto 177
+	expo_exp  goto 39
+	pure_app_raise_exp  goto 178
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 179
+	atomic_expression  goto 180
+	pure_cons_exp  goto 126
+	pure_expo_exp  goto 50
+	pure_monop_raise  goto 51
+	no_try_cons_exp  goto 236
+	no_try_add_exp  goto 187
+	no_try_mult_exp  goto 188
+	no_try_expo_exp  goto 189
+	no_try_nonop_exp  goto 190
+	no_try_if_let_fun_monop_exp  goto 191
+	no_try_app_raise_expression  goto 192
+	no_try_app_expression  goto 193
+	no_try_monop_expression  goto 194
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 214
+	rel_exp : pure_rel_exp NEQ . cons_exp  (37)
+	pure_rel_exp : pure_rel_exp NEQ . pure_cons_exp  (79)
+	no_try_rel_exp : pure_rel_exp NEQ . no_try_cons_exp  (108)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 167
+	IF  shift 168
+	FUN  shift 169
+	RAISE  shift 170
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	constant_expression  goto 26
+	monop  goto 172
+	cons_exp  goto 127
+	pure_add_exp  goto 176
+	add_exp  goto 36
+	mult_exp  goto 37
+	pure_mult_exp  goto 177
+	expo_exp  goto 39
+	pure_app_raise_exp  goto 178
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 179
+	atomic_expression  goto 180
+	pure_cons_exp  goto 128
+	pure_expo_exp  goto 50
+	pure_monop_raise  goto 51
+	no_try_cons_exp  goto 237
+	no_try_add_exp  goto 187
+	no_try_mult_exp  goto 188
+	no_try_expo_exp  goto 189
+	no_try_nonop_exp  goto 190
+	no_try_if_let_fun_monop_exp  goto 191
+	no_try_app_raise_expression  goto 192
+	no_try_app_expression  goto 193
+	no_try_monop_expression  goto 194
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 215
+	cons_exp : pure_add_exp DCOLON . cons_exp  (39)
+	pure_cons_exp : pure_add_exp DCOLON . pure_cons_exp  (81)
+	no_try_cons_exp : pure_add_exp DCOLON . no_try_cons_exp  (110)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 167
+	IF  shift 168
+	FUN  shift 169
+	RAISE  shift 170
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	constant_expression  goto 26
+	monop  goto 172
+	cons_exp  goto 129
+	pure_add_exp  goto 176
+	add_exp  goto 36
+	mult_exp  goto 37
+	pure_mult_exp  goto 177
+	expo_exp  goto 39
+	pure_app_raise_exp  goto 178
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 179
+	atomic_expression  goto 180
+	pure_cons_exp  goto 130
+	pure_expo_exp  goto 50
+	pure_monop_raise  goto 51
+	no_try_cons_exp  goto 238
+	no_try_add_exp  goto 187
+	no_try_mult_exp  goto 188
+	no_try_expo_exp  goto 189
+	no_try_nonop_exp  goto 190
+	no_try_if_let_fun_monop_exp  goto 191
+	no_try_app_raise_expression  goto 192
+	no_try_app_expression  goto 193
+	no_try_monop_expression  goto 194
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 216
+	add_exp : pure_add_exp plus_minus . mult_exp  (41)
+	pure_add_exp : pure_add_exp plus_minus . pure_mult_exp  (83)
+	no_try_add_exp : pure_add_exp plus_minus . no_try_mult_exp  (112)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 167
+	IF  shift 168
+	FUN  shift 169
+	RAISE  shift 170
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	constant_expression  goto 26
+	monop  goto 172
+	mult_exp  goto 131
+	pure_mult_exp  goto 239
+	expo_exp  goto 39
+	pure_app_raise_exp  goto 178
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 179
+	atomic_expression  goto 180
+	pure_expo_exp  goto 50
+	pure_monop_raise  goto 51
+	no_try_mult_exp  goto 240
+	no_try_expo_exp  goto 189
+	no_try_nonop_exp  goto 190
+	no_try_if_let_fun_monop_exp  goto 191
+	no_try_app_raise_expression  goto 192
+	no_try_app_expression  goto 193
+	no_try_monop_expression  goto 194
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 217
+	mult_exp : pure_mult_exp times_div . expo_exp  (43)
+	pure_mult_exp : pure_mult_exp times_div . pure_expo_exp  (85)
+	no_try_mult_exp : pure_mult_exp times_div . no_try_expo_exp  (114)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 167
+	IF  shift 168
+	FUN  shift 169
+	RAISE  shift 170
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	constant_expression  goto 26
+	monop  goto 172
+	expo_exp  goto 133
+	pure_app_raise_exp  goto 178
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 179
+	atomic_expression  goto 180
+	pure_expo_exp  goto 134
+	pure_monop_raise  goto 51
+	no_try_expo_exp  goto 241
+	no_try_nonop_exp  goto 190
+	no_try_if_let_fun_monop_exp  goto 191
+	no_try_app_raise_expression  goto 192
+	no_try_app_expression  goto 193
+	no_try_monop_expression  goto 194
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 218
+	expo_exp : pure_app_raise_exp EXP . expo_exp  (45)
+	pure_expo_exp : pure_app_raise_exp EXP . pure_expo_exp  (87)
+	no_try_expo_exp : pure_app_raise_exp EXP . no_try_expo_exp  (116)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 167
+	IF  shift 168
+	FUN  shift 169
+	RAISE  shift 170
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	constant_expression  goto 26
+	monop  goto 172
+	expo_exp  goto 135
+	pure_app_raise_exp  goto 178
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 179
+	atomic_expression  goto 180
+	pure_expo_exp  goto 136
+	pure_monop_raise  goto 51
+	no_try_expo_exp  goto 242
+	no_try_nonop_exp  goto 190
+	no_try_if_let_fun_monop_exp  goto 191
+	no_try_app_raise_expression  goto 192
+	no_try_app_expression  goto 193
+	no_try_monop_expression  goto 194
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 219
+	nonapp_exp : atomic_expression .  (56)
+	pure_app_exp : pure_app_exp atomic_expression .  (95)
+	no_try_nonapp_expression : atomic_expression .  (127)
+
+	INT  reduce 95
+	FLOAT  reduce 95
+	STRING  reduce 95
+	IDENT  reduce 95
+	TRUE  reduce 95
+	FALSE  reduce 95
+	NEG  reduce 95
+	PLUS  reduce 95
+	MINUS  reduce 95
+	TIMES  reduce 95
+	DIV  reduce 95
+	DPLUS  reduce 95
+	DMINUS  reduce 95
+	DTIMES  reduce 95
+	DDIV  reduce 95
+	MOD  reduce 95
+	EXP  reduce 95
+	CARAT  reduce 95
+	LT  reduce 95
+	GT  reduce 95
+	LEQ  reduce 95
+	GEQ  reduce 95
+	EQUALS  reduce 95
+	NEQ  reduce 95
+	PIPE  reduce 127
+	SEMI  reduce 56
+	DSEMI  reduce 56
+	DCOLON  reduce 95
+	NIL  reduce 95
+	LET  reduce 95
+	IN  reduce 56
+	IF  reduce 95
+	THEN  reduce 56
+	ELSE  reduce 56
+	FUN  reduce 95
+	RAISE  reduce 95
+	TRY  reduce 95
+	WITH  reduce 56
+	LOGICALAND  reduce 95
+	LOGICALOR  reduce 95
+	LBRAC  reduce 95
+	RBRAC  reduce 56
+	LPAREN  reduce 95
+	RPAREN  reduce 56
+	COMMA  reduce 56
+	UNIT  reduce 95
+	HEAD  reduce 95
+	TAIL  reduce 95
+	PRINT  reduce 95
+	FST  reduce 95
+	SND  reduce 95
+
+
+state 220
+	no_try_nonapp_expression : no_try_if_let_fun_monop_exp .  (128)
+
+	.  reduce 128
+
+
+state 221
+	no_try_app_raise_expression : pure_app_exp no_try_monop_expression .  (122)
+
+	.  reduce 122
+
+
+state 222
+	no_try_app_expression : pure_app_exp no_try_nonapp_expression .  (126)
+
+	.  reduce 126
+
+
+state 223
+	if_let_fun_try_monop_exp : LET REC IDENT IDENT EQUALS expression IN expression .  (59)
+
+	.  reduce 59
+
+
+state 224
+	if_let_fun_try_monop_exp : LET IDENT EQUALS . expression IN expression  (60)
+	no_try_if_let_fun_monop_exp : LET IDENT EQUALS . expression IN no_try_expression  (130)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 56
+	IF  shift 12
+	FUN  shift 13
+	RAISE  shift 14
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	expression  goto 243
+	constant_expression  goto 26
+	monop  goto 27
+	op_exp  goto 28
+	pure_or_exp  goto 29
+	and_exp  goto 30
+	pure_and_exp  goto 31
+	rel_exp  goto 32
+	pure_rel_exp  goto 33
+	cons_exp  goto 34
+	pure_add_exp  goto 35
+	add_exp  goto 36
+	mult_exp  goto 37
+	pure_mult_exp  goto 38
+	expo_exp  goto 39
+	pure_app_raise_exp  goto 40
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 46
+	atomic_expression  goto 47
+	pure_eq_exp  goto 48
+	pure_cons_exp  goto 49
+	pure_expo_exp  goto 50
+	pure_monop_raise  goto 51
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 225
+	if_let_fun_try_monop_exp : LET REC IDENT . IDENT EQUALS expression IN expression  (59)
+	no_try_if_let_fun_monop_exp : LET REC IDENT . IDENT EQUALS expression IN no_try_expression  (131)
+
+	IDENT  shift 244
+	.  error
+
+
+state 226
+	if_let_fun_try_monop_exp : IF expression THEN . expression ELSE expression  (62)
+	no_try_if_let_fun_monop_exp : IF expression THEN . expression ELSE no_try_expression  (129)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 56
+	IF  shift 12
+	FUN  shift 13
+	RAISE  shift 14
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	expression  goto 245
+	constant_expression  goto 26
+	monop  goto 27
+	op_exp  goto 28
+	pure_or_exp  goto 29
+	and_exp  goto 30
+	pure_and_exp  goto 31
+	rel_exp  goto 32
+	pure_rel_exp  goto 33
+	cons_exp  goto 34
+	pure_add_exp  goto 35
+	add_exp  goto 36
+	mult_exp  goto 37
+	pure_mult_exp  goto 38
+	expo_exp  goto 39
+	pure_app_raise_exp  goto 40
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 46
+	atomic_expression  goto 47
+	pure_eq_exp  goto 48
+	pure_cons_exp  goto 49
+	pure_expo_exp  goto 50
+	pure_monop_raise  goto 51
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 227
+	if_let_fun_try_monop_exp : FUN IDENT ARROW . expression  (61)
+	no_try_if_let_fun_monop_exp : FUN IDENT ARROW . no_try_expression  (132)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 167
+	IF  shift 168
+	FUN  shift 169
+	RAISE  shift 170
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	expression  goto 142
+	constant_expression  goto 26
+	monop  goto 172
+	op_exp  goto 28
+	pure_or_exp  goto 173
+	and_exp  goto 30
+	pure_and_exp  goto 174
+	rel_exp  goto 32
+	pure_rel_exp  goto 175
+	cons_exp  goto 34
+	pure_add_exp  goto 176
+	add_exp  goto 36
+	mult_exp  goto 37
+	pure_mult_exp  goto 177
+	expo_exp  goto 39
+	pure_app_raise_exp  goto 178
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 179
+	atomic_expression  goto 180
+	pure_eq_exp  goto 48
+	pure_cons_exp  goto 49
+	pure_expo_exp  goto 50
+	pure_monop_raise  goto 51
+	no_try_expression  goto 246
+	no_try_op_exp  goto 182
+	no_try_and_exp  goto 183
+	no_try_eq_exp  goto 184
+	no_try_rel_exp  goto 185
+	no_try_cons_exp  goto 186
+	no_try_add_exp  goto 187
+	no_try_mult_exp  goto 188
+	no_try_expo_exp  goto 189
+	no_try_nonop_exp  goto 190
+	no_try_if_let_fun_monop_exp  goto 191
+	no_try_app_raise_expression  goto 192
+	no_try_app_expression  goto 193
+	no_try_monop_expression  goto 194
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 228
+	no_try_monop_expression : monop RAISE no_try_app_raise_expression .  (123)
+
+	.  reduce 123
+
+
+state 229
+	and_exp : pure_and_exp . LOGICALAND rel_exp  (30)
+	pure_or_exp : pure_or_exp LOGICALOR pure_and_exp .  (69)
+	pure_and_exp : pure_and_exp . LOGICALAND pure_eq_exp  (71)
+	no_try_and_exp : pure_and_exp . LOGICALAND no_try_eq_exp  (100)
+
+	LOGICALAND  shift 208
+	LOGICALOR  reduce 69
+
+
+state 230
+	no_try_op_exp : pure_or_exp LOGICALOR no_try_and_exp .  (98)
+
+	.  reduce 98
+
+
+state 231
+	no_try_and_exp : pure_and_exp LOGICALAND no_try_eq_exp .  (100)
+
+	.  reduce 100
+
+
+state 232
+	no_try_rel_exp : pure_rel_exp LT no_try_cons_exp .  (105)
+
+	.  reduce 105
+
+
+state 233
+	no_try_rel_exp : pure_rel_exp GT no_try_cons_exp .  (103)
+
+	.  reduce 103
+
+
+state 234
+	no_try_rel_exp : pure_rel_exp LEQ no_try_cons_exp .  (107)
+
+	.  reduce 107
+
+
+state 235
+	no_try_rel_exp : pure_rel_exp GEQ no_try_cons_exp .  (106)
+
+	.  reduce 106
+
+
+state 236
+	no_try_rel_exp : pure_rel_exp EQUALS no_try_cons_exp .  (104)
+
+	.  reduce 104
+
+
+state 237
+	no_try_rel_exp : pure_rel_exp NEQ no_try_cons_exp .  (108)
+
+	.  reduce 108
+
+
+state 238
+	no_try_cons_exp : pure_add_exp DCOLON no_try_cons_exp .  (110)
+
+	.  reduce 110
+
+
+state 239
+	mult_exp : pure_mult_exp . times_div expo_exp  (43)
+	pure_add_exp : pure_add_exp plus_minus pure_mult_exp .  (83)
+	pure_mult_exp : pure_mult_exp . times_div pure_expo_exp  (85)
+	no_try_mult_exp : pure_mult_exp . times_div no_try_expo_exp  (114)
+
+	TIMES  shift 87
+	DIV  shift 88
+	DTIMES  shift 89
+	DDIV  shift 90
+	MOD  shift 91
+	PLUS  reduce 83
+	MINUS  reduce 83
+	DPLUS  reduce 83
+	DMINUS  reduce 83
+	CARAT  reduce 83
+	LT  reduce 83
+	GT  reduce 83
+	LEQ  reduce 83
+	GEQ  reduce 83
+	EQUALS  reduce 83
+	NEQ  reduce 83
+	DCOLON  reduce 83
+	LOGICALAND  reduce 83
+	LOGICALOR  reduce 83
+
+	times_div  goto 217
+
+
+state 240
+	no_try_add_exp : pure_add_exp plus_minus no_try_mult_exp .  (112)
+
+	.  reduce 112
+
+
+state 241
+	no_try_mult_exp : pure_mult_exp times_div no_try_expo_exp .  (114)
+
+	.  reduce 114
+
+
+state 242
+	no_try_expo_exp : pure_app_raise_exp EXP no_try_expo_exp .  (116)
+
+	.  reduce 116
+
+
+state 243
+	if_let_fun_try_monop_exp : LET IDENT EQUALS expression . IN expression  (60)
+	no_try_if_let_fun_monop_exp : LET IDENT EQUALS expression . IN no_try_expression  (130)
+
+	IN  shift 247
+	.  error
+
+
+state 244
+	if_let_fun_try_monop_exp : LET REC IDENT IDENT . EQUALS expression IN expression  (59)
+	no_try_if_let_fun_monop_exp : LET REC IDENT IDENT . EQUALS expression IN no_try_expression  (131)
+
+	EQUALS  shift 248
+	.  error
+
+
+state 245
+	if_let_fun_try_monop_exp : IF expression THEN expression . ELSE expression  (62)
+	no_try_if_let_fun_monop_exp : IF expression THEN expression . ELSE no_try_expression  (129)
+
+	ELSE  shift 249
+	.  error
+
+
+state 246
+	no_try_if_let_fun_monop_exp : FUN IDENT ARROW no_try_expression .  (132)
+
+	.  reduce 132
+
+
+state 247
+	if_let_fun_try_monop_exp : LET IDENT EQUALS expression IN . expression  (60)
+	no_try_if_let_fun_monop_exp : LET IDENT EQUALS expression IN . no_try_expression  (130)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 167
+	IF  shift 168
+	FUN  shift 169
+	RAISE  shift 170
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	expression  goto 162
+	constant_expression  goto 26
+	monop  goto 172
+	op_exp  goto 28
+	pure_or_exp  goto 173
+	and_exp  goto 30
+	pure_and_exp  goto 174
+	rel_exp  goto 32
+	pure_rel_exp  goto 175
+	cons_exp  goto 34
+	pure_add_exp  goto 176
+	add_exp  goto 36
+	mult_exp  goto 37
+	pure_mult_exp  goto 177
+	expo_exp  goto 39
+	pure_app_raise_exp  goto 178
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 179
+	atomic_expression  goto 180
+	pure_eq_exp  goto 48
+	pure_cons_exp  goto 49
+	pure_expo_exp  goto 50
+	pure_monop_raise  goto 51
+	no_try_expression  goto 250
+	no_try_op_exp  goto 182
+	no_try_and_exp  goto 183
+	no_try_eq_exp  goto 184
+	no_try_rel_exp  goto 185
+	no_try_cons_exp  goto 186
+	no_try_add_exp  goto 187
+	no_try_mult_exp  goto 188
+	no_try_expo_exp  goto 189
+	no_try_nonop_exp  goto 190
+	no_try_if_let_fun_monop_exp  goto 191
+	no_try_app_raise_expression  goto 192
+	no_try_app_expression  goto 193
+	no_try_monop_expression  goto 194
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 248
+	if_let_fun_try_monop_exp : LET REC IDENT IDENT EQUALS . expression IN expression  (59)
+	no_try_if_let_fun_monop_exp : LET REC IDENT IDENT EQUALS . expression IN no_try_expression  (131)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 56
+	IF  shift 12
+	FUN  shift 13
+	RAISE  shift 14
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	expression  goto 251
+	constant_expression  goto 26
+	monop  goto 27
+	op_exp  goto 28
+	pure_or_exp  goto 29
+	and_exp  goto 30
+	pure_and_exp  goto 31
+	rel_exp  goto 32
+	pure_rel_exp  goto 33
+	cons_exp  goto 34
+	pure_add_exp  goto 35
+	add_exp  goto 36
+	mult_exp  goto 37
+	pure_mult_exp  goto 38
+	expo_exp  goto 39
+	pure_app_raise_exp  goto 40
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 46
+	atomic_expression  goto 47
+	pure_eq_exp  goto 48
+	pure_cons_exp  goto 49
+	pure_expo_exp  goto 50
+	pure_monop_raise  goto 51
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 249
+	if_let_fun_try_monop_exp : IF expression THEN expression ELSE . expression  (62)
+	no_try_if_let_fun_monop_exp : IF expression THEN expression ELSE . no_try_expression  (129)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 167
+	IF  shift 168
+	FUN  shift 169
+	RAISE  shift 170
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	expression  goto 165
+	constant_expression  goto 26
+	monop  goto 172
+	op_exp  goto 28
+	pure_or_exp  goto 173
+	and_exp  goto 30
+	pure_and_exp  goto 174
+	rel_exp  goto 32
+	pure_rel_exp  goto 175
+	cons_exp  goto 34
+	pure_add_exp  goto 176
+	add_exp  goto 36
+	mult_exp  goto 37
+	pure_mult_exp  goto 177
+	expo_exp  goto 39
+	pure_app_raise_exp  goto 178
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 179
+	atomic_expression  goto 180
+	pure_eq_exp  goto 48
+	pure_cons_exp  goto 49
+	pure_expo_exp  goto 50
+	pure_monop_raise  goto 51
+	no_try_expression  goto 252
+	no_try_op_exp  goto 182
+	no_try_and_exp  goto 183
+	no_try_eq_exp  goto 184
+	no_try_rel_exp  goto 185
+	no_try_cons_exp  goto 186
+	no_try_add_exp  goto 187
+	no_try_mult_exp  goto 188
+	no_try_expo_exp  goto 189
+	no_try_nonop_exp  goto 190
+	no_try_if_let_fun_monop_exp  goto 191
+	no_try_app_raise_expression  goto 192
+	no_try_app_expression  goto 193
+	no_try_monop_expression  goto 194
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 250
+	no_try_if_let_fun_monop_exp : LET IDENT EQUALS expression IN no_try_expression .  (130)
+
+	.  reduce 130
+
+
+state 251
+	if_let_fun_try_monop_exp : LET REC IDENT IDENT EQUALS expression . IN expression  (59)
+	no_try_if_let_fun_monop_exp : LET REC IDENT IDENT EQUALS expression . IN no_try_expression  (131)
+
+	IN  shift 253
+	.  error
+
+
+state 252
+	no_try_if_let_fun_monop_exp : IF expression THEN expression ELSE no_try_expression .  (129)
+
+	.  reduce 129
+
+
+state 253
+	if_let_fun_try_monop_exp : LET REC IDENT IDENT EQUALS expression IN . expression  (59)
+	no_try_if_let_fun_monop_exp : LET REC IDENT IDENT EQUALS expression IN . no_try_expression  (131)
+
+	INT  shift 3
+	FLOAT  shift 4
+	STRING  shift 5
+	IDENT  shift 6
+	TRUE  shift 7
+	FALSE  shift 8
+	NEG  shift 9
+	NIL  shift 10
+	LET  shift 167
+	IF  shift 168
+	FUN  shift 169
+	RAISE  shift 170
+	TRY  shift 15
+	LBRAC  shift 16
+	LPAREN  shift 17
+	UNIT  shift 18
+	HEAD  shift 19
+	TAIL  shift 20
+	PRINT  shift 21
+	FST  shift 22
+	SND  shift 23
+	.  error
+
+	expression  goto 223
+	constant_expression  goto 26
+	monop  goto 172
+	op_exp  goto 28
+	pure_or_exp  goto 173
+	and_exp  goto 30
+	pure_and_exp  goto 174
+	rel_exp  goto 32
+	pure_rel_exp  goto 175
+	cons_exp  goto 34
+	pure_add_exp  goto 176
+	add_exp  goto 36
+	mult_exp  goto 37
+	pure_mult_exp  goto 177
+	expo_exp  goto 39
+	pure_app_raise_exp  goto 178
+	nonop_exp  goto 41
+	if_let_fun_try_monop_exp  goto 42
+	app_raise_exp  goto 43
+	app_exp  goto 44
+	monop_raise  goto 45
+	pure_app_exp  goto 179
+	atomic_expression  goto 180
+	pure_eq_exp  goto 48
+	pure_cons_exp  goto 49
+	pure_expo_exp  goto 50
+	pure_monop_raise  goto 51
+	no_try_expression  goto 254
+	no_try_op_exp  goto 182
+	no_try_and_exp  goto 183
+	no_try_eq_exp  goto 184
+	no_try_rel_exp  goto 185
+	no_try_cons_exp  goto 186
+	no_try_add_exp  goto 187
+	no_try_mult_exp  goto 188
+	no_try_expo_exp  goto 189
+	no_try_nonop_exp  goto 190
+	no_try_if_let_fun_monop_exp  goto 191
+	no_try_app_raise_expression  goto 192
+	no_try_app_expression  goto 193
+	no_try_monop_expression  goto 194
+	list_expression  goto 52
+	paren_expression  goto 53
+
+
+state 254
+	no_try_if_let_fun_monop_exp : LET REC IDENT IDENT EQUALS expression IN no_try_expression .  (131)
+
+	.  reduce 131
+
+
+60 terminals, 58 nonterminals
+150 grammar rules, 255 states
